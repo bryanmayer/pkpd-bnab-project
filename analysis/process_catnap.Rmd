@@ -1,0 +1,62 @@
+---
+title: "Pull and Process CATNAP data"
+author: "Bryan Mayer"
+date: "`r Sys.Date()`"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+This script accesses CATNAP database at time of call and process by stripping text from censored IC50s.
+
+```{r}
+library(tidyverse)
+process_conc = function(conc){
+  as.numeric(if_else(grepl("<", conc), gsub("<", "", conc),
+          if_else(grepl(">", conc), gsub(">", "", conc), conc)))
+}
+
+virus_url = 'https://www.hiv.lanl.gov/cgi-bin/common_code/download.cgi?/scratch/NEUTRALIZATION/viruses.txt'
+assay_url = 'https://www.hiv.lanl.gov/cgi-bin/common_code/download.cgi?/scratch/NEUTRALIZATION/assay.txt'
+
+
+# reprocess the ICs so that they are not character strings
+virus_dat = read_tsv(url(virus_url)) %>% janitor::clean_names()
+catnap_raw = read.table(url(assay_url), stringsAsFactors = F,
+                         header = T, sep = "\t", na.strings = "")
+
+subset(catnap_raw, str_detect(Reference, "Wagh") & Antibody %in% "3BNC117/PGT135")
+
+tmp = subset(catnap_raw, !is.na(ID50))
+unique(tmp$Antibody) # these are polyclonal and can be subsetted out and ID50 can be removed
+
+# for error checking
+#tmp2 = subset(catnap_raw, grepl(">", IC80))
+#left_cens = subset(catnap_raw, grepl("<", IC80) | grepl("<", IC50))
+
+catnap_dat = catnap_raw %>%
+  subset(is.na(ID50)) %>%
+  select(-ID50) %>%
+  gather(neut_cat, raw, IC50, IC80) %>%
+  mutate(
+    clean = process_conc(raw),
+    left_cens =  grepl("<", raw),
+    right_cens = grepl(">", raw)
+  ) %>%
+  distinct() %>%
+  pivot_wider(names_from = "neut_cat", values_from = c("raw", "clean", "left_cens", "right_cens")) %>%
+  mutate(neutralization = !right_cens_IC50) %>%
+  group_by(Virus) %>%
+  mutate(
+    any_neutralization = any(neutralization),
+    all_neutralization = all(neutralization)
+  ) %>%
+  ungroup() %>%
+  left_join(virus_dat, by = c("Virus" = "virus_name"))
+
+
+write_csv(catnap_dat, "output/processed_catnap_assay.csv")
+write_rds(catnap_dat, "output/processed_catnap_assay.rds")
+
+```
+

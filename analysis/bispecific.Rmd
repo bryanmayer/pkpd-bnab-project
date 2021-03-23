@@ -1,0 +1,544 @@
+---
+title: "Bispecific Analysis"
+author: "Bryan"
+date: "2020-09-10"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r, message = F, warning = F}
+
+library(tidyverse)
+library(kableExtra)
+library(cowplot)
+library(viridis)
+library(VISCPK)
+theme_set(theme_bw() + theme(legend.position = "top", legend.key.width = unit(1, "cm"),
+                             legend.box = "vertical"))
+source("code/neutralization-funs.R")
+source("code/onecmptPKPD-sims.R")
+
+ratio_lab = "mAb1/total dose"
+ratio_breaks = 0:4/4
+ratio_labels = c("mAb 2", 1:3/4, "mAb 1")
+ratio_labels_x = c("All\nmAb 2", 1:3/4, "All\nmAb 1")
+
+doses = c(150, 300, 600, 1200, 2400)
+
+interaction_labeller = function(interaction_var){
+  factor(interaction_var,
+         labels = c("Min. Neut.", "Max. Neut.", "Additivity", "Bliss-Hill"),
+         levels = c("minNeut", "maxNeut", "additivity", "BH")
+  )
+}
+
+# parameter grid
+
+hl = c(7, 28, 42, 84)
+omega = c(0.33, 0.67, 1)
+muIC50 = c(-3, -2, -1)
+sigIC50 = c(0.25, 0.5, 1)
+
+full_combinations = crossing(
+  hl_1 = hl,
+  hl_2 = hl,
+  omega_1 = omega,
+  omega_2 = omega,
+  muIC50_1 = muIC50,
+  muIC50_2 = muIC50,
+  sigIC50_1 = sigIC50,
+  sigIC50_2 = sigIC50
+) %>%
+  filter(hl_1 <= hl_2)
+
+
+main_vars = c("ratio", "c0", "muIC50_1", "muIC50_2",
+               "hl_1", "hl_2", "sigIC50_1", "sigIC50_2",
+              "omega_1", "omega_2")
+
+```
+
+```{r, eval = F}
+mean_data = read_csv("~/Desktop/grid_full_mean2020-11-29.csv")
+
+bispecific_data = mean_data %>%
+  filter(muIC50_1 < -1 & muIC50_2 < -1 &
+           sigIC50_1 < 1 & sigIC50_2 < 1 &
+           omega_1 > 0.5 & omega_2 > 0.5) %>%
+  select(main_vars, contains("iip"))
+
+save(bispecific_data, file = "output/bispecific_data.rda")
+
+```
+
+```{r, eval = F}
+test = subset(mean_data, ratio == 0) %>%
+  filter(muIC50_1 == -3 & muIC50_2 == -2 &
+           sigIC50_1 == 0.25 & sigIC50_2 == 0.25 &
+           omega_1 == 1 & omega_2 == 0.33) %>%
+  select(main_vars,  maxNeut_iip_coverage2_mean_auc)
+  
+
+
+
+
+```
+
+
+```{r load-data}
+load("output/bispecific_data.rda")
+```
+
+
+## Setup
+
+Combine a superb bnab with bad half-live with decent mab with great half-life.
+
+- mab1: muIC50 = -3, sd (log10 IC50) = 0.25, resistance = 0%, hl = 7
+- mab2: muIC50 = -2, sd (log10 IC50) = 0.5, resistance = 33%, hl = 84
+
+Here we will want to look at both mean IIP and coverage IIP > (2 from pegu?)
+
+```{r CS2-setup}
+#case study2 is an artifact of old two case study analysis
+
+case_study2_full = bispecific_data %>%
+  filter(muIC50_1 == -3 & muIC50_2 == -2 &
+           sigIC50_1 == 0.25 & sigIC50_2 == 0.5 &
+           omega_1 == 1 & omega_2 == 0.67 &
+           hl_1 == 7 & (hl_2 == 7 | hl_2 == 84))
+
+CS2_iip = case_study2_full %>%
+  select(-contains("coverage")) %>%
+  gather(key, value, -main_vars) %>%
+  separate(key, into = c("interaction", "endpoint", "summary", "time"), sep = "_") %>%
+  unite(summary, summary, endpoint, sep = "_")
+
+
+CS2_coverage = case_study2_full %>%
+  select(main_vars, contains("coverage")) %>%
+  gather(key, value, -main_vars) %>%
+  separate(key, 
+           into = c("interaction", "endpoint", "coverage_endpoint", "summary", "time"), 
+           sep = "_") %>%
+  mutate(
+    coverage_level = parse_number(coverage_endpoint),
+    summary = "mean_coverage"
+    ) %>%
+  select(-endpoint, -coverage_endpoint)
+
+# CS = case study
+CS2_data = bind_rows(CS2_iip, CS2_coverage) %>%
+  mutate(summary_label = if_else(
+    summary == "mean_iip",
+    "Mean IIP",
+    paste("% viruses IIP >", coverage_level)),
+    value = if_else(summary == "mean_iip", value, 100 * round(value, 2))
+  )
+
+
+#main_vars[-1] should exclude ratio
+CS2_combo = CS2_data %>%
+  filter(c0 != 2400, hl_1 != hl_2) %>%
+  group_by_at(main_vars[-1]) %>%
+  group_by(interaction, summary_label, summary, time, coverage_level, add = T) %>%
+  summarize(
+    total_max = length(which(value==max(value))),
+    best_ratio = ratio[which.max(value)],
+    best_value = max(value)
+  ) %>%
+  mutate(
+    admin = "combination",
+    )
+  
+CS2_bispecific = CS2_data %>%
+  filter(ratio == 0.5 & hl_1 == hl_2 & c0 > 150) %>%
+  rename(
+    best_ratio = ratio,
+    best_value = value
+  ) %>%
+  mutate(
+    admin = "bi-specific",
+    c0 = c0/2
+  )
+
+CS2_summary = bind_rows(CS2_combo, CS2_bispecific) %>%
+  ungroup() 
+```
+
+## Parental ratio optimization and PK
+
+Look at all doses and summary endpoints to start. Switch to 300, 1200ug; mean ipi
+
+
+```{r dual-ratio, eval = F}
+
+CS2_data %>%
+  filter(c0 == 1200 & hl_1 != hl_2 & (is.na(coverage_level) | coverage_level == 2) &
+           interaction == "BH") %>%
+  dplyr::select(-coverage_level, -summary_label) %>%
+  spread(key = summary, value = value) %>%
+  ggplot(aes(x = ratio, y = mean_iip)) +
+  geom_line() +
+  geom_line(aes(y = mean_coverage * 6), colour = "blue") +
+  scale_y_continuous(sec.axis = sec_axis(~./6, name="mean_breadth")) +
+  facet_wrap( ~ time) +
+  theme(axis.title.y.right = element_text(color = "blue", size=13),
+        axis.text.y.right = element_text(color = "blue"))
+
+
+
+```
+
+```{r CS2-bestratio, fig.cap="supplement. Optimal ratios for all summaries and interactions with combination administration."}
+
+CS2_summary %>%
+  filter(admin == "combination") %>%
+  ggplot(aes(x = interaction, y = best_ratio, shape = time)) +
+  geom_point() +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  scale_y_continuous(breaks = ratio_breaks, labels = ratio_labels, limits = c(0, 1)) +
+  labs(y = "optimal ratio") +
+  facet_grid(rows = vars(summary_label), 
+             cols = vars(c0), space = "free", scales="free_x") +
+  theme(legend.box = "vertical", axis.text.x = element_text(angle = 30, hjust = 1))
+
+```
+
+```{r CS2-bestratio-subset, fig.cap="subset for analysis. not for paper."}
+
+CS2_summary %>%
+  filter(admin == "combination" & c0 %in% c(300, 1200) &
+           (summary == "mean_iip" | coverage_level == 2)) %>%
+  ggplot(aes(x = interaction, y = best_ratio, shape = time)) +
+  geom_point() +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  scale_y_continuous(breaks = ratio_breaks, labels = ratio_labels, limits = c(0, 1)) +
+  labs(y = "optimal ratio") +
+  facet_grid(rows = vars(summary_label), 
+             cols = vars(c0), space = "free", scales="free_x") +
+  theme(legend.box = "vertical", axis.text.x = element_text(angle = 30, hjust = 1))
+
+
+```
+
+```{r ratio-sensitivity}
+
+CS2_data %>%
+  filter(hl_1 != hl_2 & c0 %in% c(300, 1200) &
+           (summary == "mean_iip" | coverage_level == 2)) %>%
+  ggplot(aes(x = ratio, y = value, colour = factor(c0), linetype = time)) +
+  geom_line() +
+  scale_x_continuous(breaks = ratio_breaks, labels = ratio_labels_x, limits = c(0, 1)) +
+  geom_point(data = subset(CS2_combo, c0 %in% c(300, 1200) &
+           (summary == "mean_iip" | coverage_level == 2)),
+           aes(x = best_ratio, y = best_value)) +
+  facet_grid(rows = vars(summary_label), 
+             cols = vars(interaction),  scales="free_y", switch = "y") +
+  labs(colour = "dose (mg)", linetype = "", x = "ratio mAb 1 to total dose", y= "") +
+  theme(strip.placement = "outside", strip.background = element_blank(),
+        panel.spacing.x = unit(1, "lines"),
+        strip.switch.pad.grid = unit(0, "lines"),
+        legend.box = "horizontal")
+
+```
+
+
+```{r CS-HL, fig.cap = "what does the varying combination 1-cmpt PK look like. You basically get a fixzed mAb 2"}
+
+CS2_summary %>%
+  filter(c0 %in% c(300, 600) & summary_label %in% c("IIP > 2", "Mean IIP") &
+           admin == "combination") %>%
+  mutate(c0_1 = best_ratio * c0, c0_2 = (1-best_ratio) * c0) %>%
+  group_by(c0, summary_label, interaction, time, best_ratio) %>%
+  nest() %>%
+  mutate(pk_data = map(data, ~.pk_1cmpt(select(., c0_1, c0_2, hl_1, hl_2), 84))) %>%
+  filter(best_ratio > 0 & best_ratio < 1) %>%
+  rename(timepoint = time) %>%
+  unnest(cols = pk_data) %>%
+  gather(mab, conc, conc_1, conc_2) %>%
+  ggplot(aes(x = time, y = conc, colour = mab, linetype = factor(c0))) +
+  geom_line() +
+  scale_y_log10() +
+  facet_wrap(~best_ratio)
+
+```
+
+
+```{r bispecific-pk-pl, fig.cap="bi-specific 1-cmpt PK"}
+bispecific_pk = map_df(c(300, 1200), ~ tibble(
+  time = seq(0, 84, by = 1),
+  c0 = .,
+  conc = . / 3 * exp(-time * log(2) / 7)
+)) 
+
+bispecific_pk %>% 
+  ggplot(aes(x = time, y = conc,  linetype = factor(c0))) +
+  geom_line() +
+  scale_y_log10()
+
+
+```
+
+## No synergy bi-specific vs combination comparision
+
+The PK penalty is evident in the 1:1 comparison, where the bi-specific would dominate by assumption for common PK.
+
+```{r}
+balance_comb = CS2_data %>%
+  filter(c0 %in% c(300, 1200) &
+           hl_1 != hl_2 & (is.na(coverage_level) | coverage_level == 2) &
+           ratio == 0.5) %>%
+  mutate(best_value = value, best_ratio = ratio,
+         admin = "1:1 combination")
+
+```
+
+```{r raw-bispecific-performance-iip}
+
+CS2_summary %>%
+  bind_rows(balance_comb) %>%
+  mutate(
+    admin = if_else(admin == "combination", "optimal combination", admin)
+  ) %>%
+  filter(summary == "mean_iip" & c0 %in% c(300, 1200)) %>%
+  dplyr::select(-total_max, -coverage_level) %>%
+  ggplot(aes(x = interaction, y = best_value, colour = admin)) +
+  geom_point(position = position_dodge(width = 0.5)) +
+  #geom_abline() +
+  labs(y = "mean iip", color = "") +
+  facet_grid(cols = vars(time), rows = vars(c0), space = "free", scales="free_x")
+
+```
+
+
+```{r raw-bispecific-performance-coverage}
+
+CS2_summary %>%
+  bind_rows(balance_comb) %>%
+  mutate(
+    admin = if_else(admin == "combination", "optimal combination", admin)
+  ) %>%
+  filter(summary == "mean_coverage" & c0 %in% c(300, 1200), coverage_level == 2) %>%
+  dplyr::select(-total_max) %>%
+  ggplot(aes(x = interaction, y = best_value, colour = admin)) +
+  geom_point(position = position_dodge(width = 0.5)) +
+  #geom_abline() +
+  labs(y = "% viruses IIP > 2", color = "") +
+  facet_grid(cols = vars(time), rows = vars(c0), space = "free", scales="free_x")
+
+```
+
+## Synergy Analysis
+
+
+### Generate synergy profile
+
+```{r setup-data}
+
+bispecific_pd = CS2_bispecific %>% 
+  select(omega_1, omega_2, muIC50_1, muIC50_2, sigIC50_1, sigIC50_2) %>% 
+  distinct()
+
+```
+
+```{r sim-synergy}
+
+viral_iC50s = .sample_IC50s(total_virus_sims = 500, pd_parms = bispecific_pd,
+                              virus_seed = 822960625) %>%
+  mutate(
+    minIC50 = pmin(IC50_1, IC50_2),
+    maxIC50 = pmax(IC50_1, IC50_2)
+    )
+  
+synergy_iC50s = map_df(c(1, 10, 100, 1000), function(i){
+  viral_iC50s %>%
+    transmute(
+      synergy_factor = i,
+      maxNeut = minIC50/i,
+      minNeut = maxIC50/i
+    )
+}) %>%
+  gather(interaction, IC50, maxNeut, minNeut)
+
+bispecific_pkpd = bispecific_pk %>%
+    group_by(c0, time) %>%
+    mutate(
+      ID50_dat = map(conc, ~ (
+        tibble(
+          synergy_factor = synergy_iC50s$synergy_factor,
+          interaction = synergy_iC50s$interaction,
+          ID50 = .x/synergy_iC50s$IC50,
+          neut = titer2neut(ID50),
+          iip = -log10(1 - neut), #not mean but named this for later
+          coverage = iip > 2  #not mean but named this for later
+        ) %>%
+          group_by(synergy_factor, interaction) %>%
+          summarize_all(list(mean = mean))
+      ))
+    ) %>%
+  unnest(cols = ID50_dat) %>%
+  rename(mean_iip = iip_mean, mean_coverage = coverage_mean)
+
+bispecific_pkpd_summary = bispecific_pkpd %>%
+  arrange(c0, interaction, synergy_factor, time) %>%
+  select(-ID50_mean, -neut_mean) %>%
+  group_by(c0, interaction, synergy_factor) %>%
+  summarize_at(vars(mean_iip, mean_coverage), list(
+      auc = ~ pracma::trapz(time, .x) / max(time),
+      trough = ~(.x[time == 84])
+  )
+  ) %>%
+  gather(summary, best_value, mean_iip_auc:mean_coverage_trough) %>%
+  separate(summary, into = c("tmp1", "tmp2", "time")) %>%
+  unite(summary, tmp1, tmp2, sep = "_") %>%
+  mutate(admin = "bi-specific", coverage_level = 2) %>%
+  ungroup() %>%
+  mutate(
+    best_value = if_else(summary == "mean_iip", best_value, 100 * round(best_value, 2)),
+    summary_label = if_else(
+      summary == "mean_iip",
+      "Mean IIP",
+      paste("% viruses IIP >", coverage_level)
+    )
+  )
+
+```
+
+```{r bispecific-pkpd}
+
+
+bispecific_pkpd %>%
+  select(-ID50_mean, -neut_mean) %>%
+  gather(outcome, value, mean_iip, mean_coverage) %>%
+  ggplot(aes(x = time, y = value, colour = factor(synergy_factor))) +
+  geom_line() +
+  facet_grid(cols = vars(interaction), rows = vars(outcome, c0), scales = "free_y")
+
+```
+
+
+### Synergy comparison results
+
+```{r synergy-iip, fig.width=7}
+
+CS2_combo %>%
+  mutate(synergy_factor = 1) %>%
+  bind_rows(bispecific_pkpd_summary) %>%
+  filter(summary == "mean_iip" & c0 %in% c(300, 1200)) %>%
+  ggplot(aes(x = interaction, y = best_value, colour = factor(admin), shape = factor(synergy_factor))) +
+  geom_point(aes(group = admin), position = position_dodge(width = 0.1), size = 2) +
+  labs(y = "mean iip", color = "", shape = "synergy (fold IC50 boost)") +
+  scale_x_discrete(limits = c("BH", "additivity", "maxNeut", "minNeut")) +
+  facet_grid(cols = vars(time), rows = vars(c0), space = "free", scales="free_x")
+
+```
+
+```{r synergy-coverage, fig.width=7}
+
+CS2_combo %>%
+  mutate(synergy_factor = 1) %>%
+  bind_rows(bispecific_pkpd_summary) %>%
+  filter(summary == "mean_coverage" & c0 %in% c(300, 1200) & coverage_level == 2) %>%
+  ggplot(aes(x = interaction, y = best_value, colour = factor(admin), 
+             shape = factor(synergy_factor))) +
+  geom_point(aes(group = admin), position = position_dodge(width = 0.1), size = 2) +
+  labs(y = "% viruses IIP > 2", color = "", shape = "synergy (fold IC50 boost)") +
+  scale_x_discrete(limits = c("BH", "additivity", "maxNeut", "minNeut")) +
+  facet_grid(cols = vars(time), rows = vars(c0), space = "free", scales="free_x")
+
+```
+
+## Master figure
+
+Combines the parental and synergy analysis.
+
+```{r paper-plot, fig.height=7}
+
+bilab_location = 1.35
+final_ratio_breaks = c(0, 0.5, 1, bilab_location)
+final_ratio_labels = c("All\nbNAb2", "1:1", "All\nbNAb1", "Bi-\nspecific")
+
+opt_plot_results = CS2_combo %>%
+  ungroup() %>%
+  dplyr::filter(c0 %in% c(300, 1200) & (summary == "mean_iip" | coverage_level == 2)) %>%
+  mutate(
+    ratio = best_ratio,
+    value = best_value,
+    interaction = fct_rev(interaction_labeller(interaction))
+  )
+
+bispecific_plot_res = bispecific_pkpd_summary %>%
+  mutate(
+    ratio = bilab_location,
+    value = best_value,
+    interaction = fct_rev(interaction_labeller(interaction))
+  )
+
+make_comparison_plot = function(time_var){
+  CS2_data %>%
+    filter(
+      hl_1 != hl_2 & c0 %in% c(300, 1200) &
+        (summary == "mean_iip" | coverage_level == 2) &
+        time == time_var
+    ) %>%
+    mutate(interaction = fct_rev(interaction_labeller(interaction))) %>%
+    ggplot(aes(x = ratio, y = value, colour = factor(c0))) +
+    geom_line() +
+    scale_x_continuous(breaks = final_ratio_breaks, labels = final_ratio_labels,
+                       minor_breaks = 0:4/4) +
+    geom_point(data = dplyr::filter(opt_plot_results, time == time_var)) +
+    geom_point(data = dplyr::filter(bispecific_plot_res, time == time_var),
+                                    aes(shape = factor(synergy_factor)),
+               position = position_dodge(width = 0.25)) +
+    facet_grid(space = "free_x",
+      rows = vars(summary_label),
+      cols = vars(interaction),
+      scales = "free",
+      switch = "y"
+    ) +
+    labs(
+      colour = "dose (mg)",
+      linetype = "",
+      x = "",
+      y = time_var,
+      shape = "synergy (fold IC50 boost)"
+    ) +
+    scale_color_viridis_d(option = "D", end = 0.75) +
+    theme(
+      strip.placement = "outside",
+      strip.background = element_blank(),
+      panel.spacing.x = unit(1, "lines"),
+      panel.grid.minor.y = element_blank(),
+      strip.text.y = element_text(size = 10, margin = margin(0,0,0,0)),
+      strip.text.x = element_text(margin = margin(0,0,0,0)),
+      axis.text.x = element_text(size = 7),
+      strip.switch.pad.grid = unit(0, "lines"),
+      legend.box = "horizontal",
+      plot.margin = unit(c(0, r = 1, 0, 0), "cm")
+    )
+}
+
+auc_pl = make_comparison_plot("auc") + theme(legend.position = "none") 
+trough_pl = make_comparison_plot("trough")
+
+pl_legend = get_legend(trough_pl +
+                         theme(legend.box = "vertical", legend.margin = margin(0, 0, 0, 0, "lines"),
+                               legend.box.margin = margin(0, 0, 0, 0, "lines"),
+                               legend.text = element_text(size = 8),
+                               legend.spacing.y = unit(0, "lines"),
+                               legend.title = element_text(size = 8)))
+
+plot_grid(pl_legend,
+          plot_grid(auc_pl, trough_pl + theme(legend.position = "none"), 
+                                    nrow = 2),
+          rel_heights = c(1.25, 12), nrow = 2)
+          
+```
+
+## Actual data
+
+This analysis is difficult because there aren't that many studies with direct parental vs. bi-specific  comparisons. Even when they exist, PK data is rare. A general summary of 5 bi-specific papers (including Wagh et al papers) is that bi-specifics seem to give an IC50 boost (at a common concentration?) sometimes looking like synergy (>10-fold decrease in IC50) but there are certainly cases where the parent looks better. This could be noise when there isn't synergy, but not a clean story.
+
+The data was sort of a mess, so would want a suggestion from co-authors if this is worth the effort.
