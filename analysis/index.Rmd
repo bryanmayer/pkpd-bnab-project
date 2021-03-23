@@ -1,5 +1,5 @@
 ---
-title: "Home"
+title: "Optimizing dose-ratios for combination bnAb HIV prevention trials."
 site: workflowr::wflow_site
 output:
   workflowr::wflow_html:
@@ -8,4 +8,23 @@ editor_options:
   chunk_output_type: console
 ---
 
-Welcome to my research website.
+This project consists of five pieces:
+
+- Development of PKPD framework - writing in the manuscript
+- [Exploration of combined titer measurements.]()
+- [Theoretical sensitivity analysis.]()
+- [Bi-specific bnAb scenario.]()
+- [Three bnAb combination optimization.](empirical-case-study.html)
+
+Data for analysis comes from:
+
+- [CATNAP database.](process_catnap.html)
+- Theoretical simulations: stored externally.
+- [PK data for combination optimization.]()
+
+Other code:
+
+- [Functions.]()
+
+
+

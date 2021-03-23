@@ -1,17 +1,22 @@
-name: "pkpd-bnab-project"
+name: "ratio-optimization"
 output_dir: ../docs
 navbar:
-  title: "pkpd-bnab-project"
+  title: "ratio-optimization"
   left:
-  - text: Home
-    href: index.html
   - text: About
     href: about.html
   - text: License
     href: license.html
+  - text: Analysis Overview
+    href: index.html  
+  - text: Data
+    menu:
+    - text: Exposure Data Processing
+      href: setup-exposure-data.html
 output:
   workflowr::wflow_html:
     toc: yes
     toc_float: yes
-    theme: cosmo
+    code_folding: "hide"
+    theme: journal
     highlight: textmate
