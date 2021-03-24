@@ -60,7 +60,13 @@ main_vars = c("ratio", "c0", "muIC50_1", "muIC50_2",
 ```
 
 ```{r, eval = F}
-mean_data = read_csv("~/Desktop/grid_full_mean2020-11-29.csv")
+mean_data = read_csv("~/Desktop/grid_full_mean2020-11-29.csv") # this is a huge file
+
+test = subset(mean_data, ratio == 0) %>%
+  filter(muIC50_1 == -3 & muIC50_2 == -2 &
+           sigIC50_1 == 0.25 & sigIC50_2 == 0.25 &
+           omega_1 == 1 & omega_2 == 0.33) %>%
+  select(main_vars,  maxNeut_iip_coverage2_mean_auc)
 
 bispecific_data = mean_data %>%
   filter(muIC50_1 < -1 & muIC50_2 < -1 &
@@ -72,24 +78,10 @@ save(bispecific_data, file = "output/bispecific_data.rda")
 
 ```
 
-```{r, eval = F}
-test = subset(mean_data, ratio == 0) %>%
-  filter(muIC50_1 == -3 & muIC50_2 == -2 &
-           sigIC50_1 == 0.25 & sigIC50_2 == 0.25 &
-           omega_1 == 1 & omega_2 == 0.33) %>%
-  select(main_vars,  maxNeut_iip_coverage2_mean_auc)
-  
-
-
-
-
-```
-
 
 ```{r load-data}
 load("output/bispecific_data.rda")
 ```
-
 
 ## Setup
 
@@ -98,10 +90,10 @@ Combine a superb bnab with bad half-live with decent mab with great half-life.
 - mab1: muIC50 = -3, sd (log10 IC50) = 0.25, resistance = 0%, hl = 7
 - mab2: muIC50 = -2, sd (log10 IC50) = 0.5, resistance = 33%, hl = 84
 
-Here we will want to look at both mean IIP and coverage IIP > (2 from pegu?)
+Here we will want to look at both mean IIP and coverage IIP > 2
 
 ```{r CS2-setup}
-#case study2 is an artifact of old two case study analysis
+#the case study2 notation is an artifact of old two case study analysis
 
 case_study2_full = bispecific_data %>%
   filter(muIC50_1 == -3 & muIC50_2 == -2 &
@@ -170,7 +162,6 @@ CS2_summary = bind_rows(CS2_combo, CS2_bispecific) %>%
 ## Parental ratio optimization and PK
 
 Look at all doses and summary endpoints to start. Switch to 300, 1200ug; mean ipi
-
 
 ```{r dual-ratio, eval = F}
 
@@ -332,8 +323,35 @@ CS2_summary %>%
 
 ## Synergy Analysis
 
+### Background
+
+#### Neutralization
+
+Synergy is described as an "IC50" boost-factor ($\alpha > 1$), like an inverse-potency reduction. The neutralization calculations are done as follows using the titer definition, where i = parental arm:
+$$\tau_i = \frac{C(t)}{IC50_i}$$
+
+- Minimum: $$1 - [1+\alpha*min_i\{\tau_i\}]^{-1}$$
+
+- Maximum: $$1 - [1+\alpha*max_i\{\tau_i\}]^{-1}$$
+
+- Additivity:  $$1 - [1+\alpha\sum_i{\tau_i}]^{-1}$$
+
+- BH:  $$1 - \prod_i[1+\alpha\tau_i]^{-1}$$
+
+#### IIP
+
+The conversions to IIP then follow nicely:
+
+- Minimum: $$log_{10}[1+\alpha*min_i\{\tau_i\}]$$
+
+- Maximum: $$log_{10}[1+\alpha*max_i\{\tau_i\}]$$
+
+- Additivity:  $$log_{10}[1+\alpha\sum_i{\tau_i}]$$
+
+- BH:  $$\sum_ilog_{10}[1+\alpha\tau_i]$$
 
 ### Generate synergy profile
+
 
 ```{r setup-data}
 
@@ -345,45 +363,44 @@ bispecific_pd = CS2_bispecific %>%
 
 ```{r sim-synergy}
 
-viral_iC50s = .sample_IC50s(total_virus_sims = 500, pd_parms = bispecific_pd,
-                              virus_seed = 822960625) %>%
-  mutate(
-    minIC50 = pmin(IC50_1, IC50_2),
-    maxIC50 = pmax(IC50_1, IC50_2)
-    )
-  
-synergy_iC50s = map_df(c(1, 10, 100, 1000), function(i){
-  viral_iC50s %>%
-    transmute(
-      synergy_factor = i,
-      maxNeut = minIC50/i,
-      minNeut = maxIC50/i
-    )
-}) %>%
-  gather(interaction, IC50, maxNeut, minNeut)
+#interaction_function()
 
-bispecific_pkpd = bispecific_pk %>%
-    group_by(c0, time) %>%
-    mutate(
-      ID50_dat = map(conc, ~ (
-        tibble(
-          synergy_factor = synergy_iC50s$synergy_factor,
-          interaction = synergy_iC50s$interaction,
-          ID50 = .x/synergy_iC50s$IC50,
-          neut = titer2neut(ID50),
-          iip = -log10(1 - neut), #not mean but named this for later
-          coverage = iip > 2  #not mean but named this for later
-        ) %>%
+viral_iC50s_sims = .sample_IC50s(total_virus_sims = 500, pd_parms = bispecific_pd,
+                              virus_seed = 822960625)
+
+
+
+calc_bispecific_iip = function(conc, viral_ic50s, synergy_levels = c(1, 10, 100, 1000)) {
+  map_df(synergy_levels, function(i) {
+    viral_ic50s %>%
+      mutate(
+        titer_1 = conc / IC50_1,
+        titer_2 = conc / IC50_2,
+        min_titer = pmin(titer_1, titer_2),
+        max_titer = pmax(titer_1, titer_2)
+      ) %>%
+      transmute(
+        synergy_factor = i,
+        maxNeut = log10(1 + max_titer * i),
+        minNeut = log10(1 + min_titer * i),
+        BH = log10(1 + i * titer_1) + log10(1 + i * titer_2),
+        additivity = log10(1 + i * (titer_1 + titer_2))
+      )
+  }) %>%
+    gather(interaction, iip, maxNeut, minNeut, BH, additivity) %>%
+    mutate(coverage = iip > 2) %>%
           group_by(synergy_factor, interaction) %>%
           summarize_all(list(mean = mean))
-      ))
-    ) %>%
+}
+  
+bispecific_pkpd = bispecific_pk %>%
+  group_by(c0, time) %>%
+  mutate(ID50_dat = map(conc, calc_bispecific_iip, viral_ic50s = viral_iC50s_sims)) %>%
   unnest(cols = ID50_dat) %>%
   rename(mean_iip = iip_mean, mean_coverage = coverage_mean)
 
 bispecific_pkpd_summary = bispecific_pkpd %>%
   arrange(c0, interaction, synergy_factor, time) %>%
-  select(-ID50_mean, -neut_mean) %>%
   group_by(c0, interaction, synergy_factor) %>%
   summarize_at(vars(mean_iip, mean_coverage), list(
       auc = ~ pracma::trapz(time, .x) / max(time),
@@ -410,7 +427,6 @@ bispecific_pkpd_summary = bispecific_pkpd %>%
 
 
 bispecific_pkpd %>%
-  select(-ID50_mean, -neut_mean) %>%
   gather(outcome, value, mean_iip, mean_coverage) %>%
   ggplot(aes(x = time, y = value, colour = factor(synergy_factor))) +
   geom_line() +
@@ -456,7 +472,7 @@ Combines the parental and synergy analysis.
 
 ```{r paper-plot, fig.height=7}
 
-bilab_location = 1.35
+bilab_location = 1.45
 final_ratio_breaks = c(0, 0.5, 1, bilab_location)
 final_ratio_labels = c("All\nbNAb2", "1:1", "All\nbNAb1", "Bi-\nspecific")
 
@@ -470,6 +486,7 @@ opt_plot_results = CS2_combo %>%
   )
 
 bispecific_plot_res = bispecific_pkpd_summary %>%
+  filter(synergy_factor < 1000) %>%
   mutate(
     ratio = bilab_location,
     value = best_value,
@@ -511,6 +528,7 @@ make_comparison_plot = function(time_var){
       strip.background = element_blank(),
       panel.spacing.x = unit(1, "lines"),
       panel.grid.minor.y = element_blank(),
+      panel.grid.minor.x = element_blank(),
       strip.text.y = element_text(size = 10, margin = margin(0,0,0,0)),
       strip.text.x = element_text(margin = margin(0,0,0,0)),
       axis.text.x = element_text(size = 7),
