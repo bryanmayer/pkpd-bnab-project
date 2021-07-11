@@ -104,10 +104,14 @@ all_pk %>%
 
 pk_window = seq(0, 84, by = 0.5)
 
-pk_pl_all = all_pk %>%
+example_pk_dat  = all_pk %>%
   unnest(cols = rate_parms) %>%
   mutate(dose = 600) %>%
-  create_pk(pk_window) %>%
+  create_pk(pk_window) 
+
+write_csv(example_pk_dat, "output/example-empirical-pk-dat.csv")
+
+pk_pl_all = example_pk_dat %>%
   ggplot(aes(x = time, y = conc, color = analyte)) +
   geom_line() +
   labs(y = "Concentration (ug/mL; 600 mg dose)", x = "days")
@@ -127,7 +131,11 @@ man_pk_pl = all_pk %>%
   geom_line() +
   labs(y = expression(paste("concentration (",mu,"g/mL; 600 mg dose)")), colour = "", x = "days") +
   theme(legend.direction = "vertical", legend.position = c(1,1),
-        legend.justification = c(1,1), legend.background = element_blank())
+        legend.justification = c(1.05,1.05),      
+        legend.key.height =  unit(0.5, "cm"),
+        legend.margin = margin(t = -10),
+         legend.box.background = element_rect(colour = "black"),
+)
 
 man_pk_pl
 
@@ -235,20 +243,40 @@ pegu_dat = tibble(
   neut = c(0.5, 0.75, 0.95)
 )
 empirical_pd_fit = drc::drm(neut ~ titer, data = pegu_dat, 
-                        fct = drc::LL.5(names = c("slope", "lower", "upper", "inflection", "asymmetry"),
+                        fct = drc::LL.5(names = c("slope", "lower", "upper",
+                                                  "inflection", "asymmetry"),
                              fixed = c(NA, 0, 1, NA, NA)))
 
 pegu_pl = tibble(
-  titer = 10^seq(-0.1, 4, length = 100),
-  neut = predict(empirical_pd_fit, data.frame(titer = titer))
+  titer = 10^seq(-0.1, 4.5, length = 100),
+  invitro = 1 - (1 + titer)^(-1),
+  empirical = predict(empirical_pd_fit, data.frame(titer = titer)),
+  potency =  1 - (1 + titer/91)^(-1)
 ) %>%
+  gather(model, neut, invitro, empirical, potency) %>%
   ggplot(aes(x = titer, y = neut * 100)) +
-  geom_line() +
+  geom_line(aes(colour = model, linetype = model)) +
   geom_point(data = pegu_dat) +
   scale_y_continuous(breaks = 0:10 * 10) +
-  labs(y = "empirical protection (%) (Pegu et al.)") +
+  labs(y = "empirical protection (%) (Pegu et al.)", 
+       colour = "", linetype = "") +
+  scale_color_manual(breaks = c("invitro", "empirical", "potency"), 
+                     labels = c("In vitro neutralization", "5PL", 
+                                "Potency reduction"),
+                     values = c("black", "black", "gray")) +
+  scale_linetype_manual(breaks = c("invitro", "empirical", "potency"), 
+                     labels = c("In vitro neutralization", "5PL", 
+                                "Potency reduction"),
+                     values = c(2, 1, 1)) +
   scale_x_log10(breaks = 10^(0:4), labels = as.character(10^(0:4))) +
-  theme(axis.text.x = element_text(size = 8))
+  theme(axis.text.x = element_text(size = 8), 
+        legend.key.width = unit(0.5, "cm"), 
+        legend.key.height =  unit(0.5, "cm"),
+        legend.margin = margin(t = -10,0,0,0),
+        legend.box.background = element_rect(colour = "black"),
+        legend.position = c(1, 0), legend.text = element_text(size = 7),
+        legend.direction = "vertical", 
+        legend.justification = c(1.01, -.10))
 
 pegu_pl
 
