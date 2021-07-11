@@ -505,7 +505,8 @@ make_comparison_plot = function(time_var){
     geom_line() +
     scale_x_continuous(breaks = final_ratio_breaks, labels = final_ratio_labels,
                        minor_breaks = 0:4/4) +
-    geom_point(data = dplyr::filter(opt_plot_results, time == time_var)) +
+    geom_point(data = dplyr::filter(opt_plot_results, time == time_var), 
+               shape = 21, fill = "white") +
     geom_point(data = dplyr::filter(bispecific_plot_res, time == time_var),
                                     aes(shape = factor(synergy_factor)),
                position = position_dodge(width = 0.25)) +
