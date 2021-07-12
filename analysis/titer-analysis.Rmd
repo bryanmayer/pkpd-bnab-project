@@ -12,13 +12,29 @@ library(metR)
 library(tidyverse)
 library(kableExtra)
 library(cowplot)
-source("code/neutralization-funs.R")
-source("code/onecmptPKPD-sims.R")
-theme_set(theme_bw())
+library(here)
+source(here("code/neutralization-funs.R"))
+source(here("code/onecmptPKPD-sims.R"))
+theme_set(theme_bw() + theme(legend.position = "top"))
 ```
 
+```{r setup}
 
-```{r conc-setup}
+pk_data = read_csv(here("data/empirical-pk-data/example-pk-dat.csv"),
+                   col_types = cols()) %>%
+  dplyr::filter(mab != "bNAb2") %>%
+  dplyr::select(-analyte) %>%
+  mutate(mab = if_else(mab == "bNAb3", "bNAb2", mab),
+         conc = conc/3) %>%
+  rename(Days = time)
+
+paste_ic50s = function(x) paste0("{",paste(x, collapse = ", "), "}")
+conc_range = 10^(seq(-2, 2.5,  length = 50))
+conc_grid = crossing(a = conc_range, b = conc_range)
+
+```
+
+```{r funs}
 
 odds2fraction = function(odds_1, odds_2, return_all_frac = F){
   frac_1 = odds_1/(odds_1+odds_2)
@@ -26,17 +42,244 @@ odds2fraction = function(odds_1, odds_2, return_all_frac = F){
   frac_1
 }
 
+BHtiterIIP_tau2iip = function(ID501, ID502){
+   log10(1+calc_BHID50(ID501, ID502))
+}
+BHneutIIP_tau2iip = function(ID501, ID502){
+  log10(1+ID501) + log10(1+ID502)
+}
 
-paste_ic50s = function(x) paste0("{",paste(x, collapse = ", "), "}")
-conc_range = 10^(seq(-2, 2.5,  length = 50))
-conc_grid = crossing(a = conc_range, b = conc_range)
+BHcalcs_tau = function(ID501, ID502){
+  tibble(
+    ID501 = ID501,
+    ID502 = ID502,
+    combined_titer = calc_BHID50(ID501, ID502),
+    combined_titer_IIP = log10(1+combined_titer),
+    combined_neut = titer2BH(ID501, ID502),
+    combined_neut_IIP = log10(1+ID501) + log10(1+ID502)
+    
+  )
+}
+
+create_virus_pkpd = function(virus_ic50s, virus_name = NA_character_,
+                             pk_data_in){
+  pk_data_in %>%
+    pivot_wider(names_from = "mab", values_from = "conc") %>%
+    rowwise() %>%
+    mutate(
+      virus = virus_name,
+      ID501 = bNAb1 / virus_ic50s[1],
+      ID502 = bNAb2 / virus_ic50s[2],
+      additivity_ID50 = ID501 + ID502,
+      additivity_neut = 1 - 1/(1+ additivity_ID50),
+      BH_ID50 = calc_BHID50(ID501, ID502),
+      BH_neut = titer2BH(ID501, ID502)
+    ) 
+}
+
+```
+
+# Supplementary example
+
+## Via concentration ratios
+
+From earlier iteration, we want concentration ratios of 1:1 and 1:10; and
+\{1, 0.1\} IC50s.
+
+```{r simple-setup}
+
+titer_title = expression(paste("Predicted experimental ID"[50]))
+ratio_title = "bNAb concentration ratio\nbNAB1:bNAb2"
+conc_title = "[Total concentration]"
+iip_title = "Neutralization IIP"
+ic50_title = "Viral IC50\n{bNAb1, bNAb2}"
+
+conc_labeller = tibble(
+  breaks = c(0.1, 1, 10, 100),
+  labels = as.character(c(0.1, 1, 10, 100))
+)
+
+#supp_IC50_list = list(c(0.05, 0.5), c(5, 0.5))
+supp_IC50_list = list(c(0.01, 0.5), c(1, 0.1))
+conc_range = 10^(seq(-1, 2.5,  length = 200))
+
+```
+
+
+```{r supp-sim}
+
+
+single_virus_example =  map_df(supp_IC50_list, function(y) {
+  purrr::map_df(c(1, 10), function(x) {
+    tmp_pk = tibble(
+      ic50s = paste_ic50s(y),
+      index = 1:length(conc_range),
+      bNAb1 = conc_range / (1 + x),
+      bNAb2 = conc_range / (1 + 1 / x)
+    ) %>%
+      gather(mab, conc, bNAb1:bNAb2)
+    create_virus_pkpd(virus_ic50s = y, pk_data_in = tmp_pk) %>%
+      mutate(ratio = x)
+  })
+}) %>% 
+  mutate(ratio_lab = factor(ratio, levels = c(1, 10),
+                         labels = c( "1:1", "1:10")))
+
+single_virus_example_long = single_virus_example %>%
+  dplyr::select(-virus) %>%
+    gather(endpoint, value, -index, -ratio, -ic50s,
+           -ratio_lab, -ID501, -ID502, -bNAb1, -bNAb2) %>%
+    separate(endpoint, into = c("interaction", "endpoint")) %>%
+    spread(endpoint, value)
+
+```
+
+
+```{r simple-example-titer}
+
+id50_pred_pl = single_virus_example_long %>%
+  mutate(
+    interaction = interaction_labeller(interaction)
+  ) %>%
+  ggplot(aes(
+    x = bNAb1 + bNAb2,
+    y = ID50,
+    linetype = ratio_lab
+  )) +
+  geom_line(aes(color = ic50s)) +
+  scale_x_log10(breaks = conc_labeller$breaks, 
+                labels = conc_labeller$labels) +
+  scale_y_log10() +
+  coord_cartesian(ylim = c(1, 1000), xlim = c(0.1, 100)) +
+  facet_grid(cols = vars(interaction),
+             switch = "y") +
+  labs(
+      x = conc_title,
+      y = titer_title,
+      linetype = ratio_title,
+      colour = ic50_title
+    ) +
+  theme(legend.position = "top", strip.placement = "outside") 
+
+leg = get_legend(id50_pred_pl + 
+                   guides(colour = guide_legend(title.position = "left"),
+                          linetype = guide_legend(title.position = "left")) +
+                   theme(legend.direction = "vertical", legend.box.margin = margin(b=-2),
+                         legend.background = element_rect(colour = "black", size = 0.1))) 
+
+
+plot_grid(leg, id50_pred_pl+theme(legend.position = "none"), rel_heights = c(2,12), nrow = 2)
+
+```
+
+
+
+```{r simple-example-neut}
+
+neut_pred_pl = single_virus_example_long %>%
+  mutate(
+    interaction = interaction_labeller(interaction)
+  ) %>%
+  ggplot(aes(
+    x = bNAb1 + bNAb2,
+    y = -log10(1-neut),
+    linetype = ratio_lab
+  )) +
+  geom_line(aes(color = ic50s)) +
+  scale_x_log10(breaks = conc_labeller$breaks, labels = conc_labeller$labels) +
+  coord_cartesian(xlim = c(0.1, 100)) +
+  facet_grid(cols = vars(interaction),
+             switch = "y") +
+  labs(x = conc_title, linetype = ratio_title, y = iip_title,
+       colour = ic50_title) +
+  theme(legend.position = "none", strip.placement = "outside") 
+
+neut_pred_pl
+
+```
+
+
+```{r simple-titer-iip}
+
+titer_iip_pl_dat = single_virus_example_long %>%
+  dplyr::select(interaction, ID50, neut) %>%
+  distinct() %>%
+  mutate(
+    interaction = interaction_labeller(interaction),
+    neut = titer2neut(ID50)
+  ) 
+  
+iip_titer_pl = single_virus_example_long %>%
+  mutate(
+    interaction = interaction_labeller(interaction)
+  ) %>%
+  ggplot(aes(
+    x = ID50,
+    y = -log10(1-neut),
+  )) +
+  geom_line(aes(color = ic50s, linetype = ratio_lab)) +
+  geom_line(data = titer_iip_pl_dat, linetype = "solid") +
+  scale_x_log10() +
+  facet_grid(cols = vars(interaction),
+             switch = "y") +
+  coord_cartesian(xlim = c(1, 1000)) +
+  labs(
+    x = titer_title, linetype = ratio_title, y = iip_title, colour = ic50_title
+  ) +
+  theme(legend.position = "none", strip.placement = "outside") 
+
+iip_titer_pl
+
+```
+
+
+```{r supp-pl, fig.height=8, fig.width=6}
+
+main_figs = plot_grid(id50_pred_pl+theme(legend.position ="none"),
+                                         neut_pred_pl, iip_titer_pl, nrow = 3,
+                      align = "v")
+
+plot_grid(leg, main_figs, nrow = 2, rel_heights = c(1.5,12))                      
+                      
+```
+
+
+```{r bh-neut-by-virus, eval = F}
+#abandon??
+ex_pk_pl = pk_data %>%
+  ggplot(aes(x = Days, y = pmax(1, conc), colour = mab)) +
+  geom_line() +
+  scale_y_log10(limits = c(1, max(pk_data$conc))) +
+  labs(y = "Concentration", colour = "")
+ex_pk_pl
+
+IC50_list = list(c(1, 0.1),
+                 c(1, 0.1))
+supp_example = map_df(1:length(IC50_list), ~create_virus_pkpd(IC50_list[[.]], ., 
+                                               pk_data = pk_data))
+supp_example %>%
+  ggplot(aes(x = Days, y = -log10(1 - BH_neut), colour = factor(virus))) +
+  geom_hline(yintercept = 2, linetype = "dotted") +
+  geom_line()
+supp_example %>%
+  ggplot(aes(x = Days, y = pmax(1, BH_ID50), colour = factor(virus))) +
+  geom_line() +
+  scale_y_log10()
+
+supp_example %>%
+  ggplot(aes(x = Days, y = log10(1+pmax(1, BH_ID50)), colour = factor(virus))) +
+  geom_line() +
+  geom_hline(yintercept = 2, linetype = "dotted") +
+  scale_y_log10()
+
+
 ```
 
 # Two mAb vs. single virus
 
 Same IC50 -- highlights the issues with titer and BH.
 
-```{r twomab-onevirus}
+```{r twomab-onevirus, eval = F}
 IC501 = 1
 IC502 = 1
 
@@ -116,7 +359,7 @@ single_virus_example2 = purrr::map_df(c(0.1, 1, 10), function(x) {
       BH_ID50 = calc_BHID50(ID501, ID502),
       BH_neut = titer2BH(ID501, ID502)
     ) %>%
-    gather(endpoint, value,-input_conc, -ratioAB, -ID501,-ID502, -IC50lab) %>%
+    gather(endpoint, value, -input_conc, -ratioAB, -ID501,-ID502, -IC50lab) %>%
     separate(endpoint, into = c("interaction", "endpoint")) %>%
     spread(endpoint, value)
 })
@@ -155,138 +398,3 @@ single_virus_example2 %>%
 
 ```
 
-
-# Multiple viruses
-
-## Simulated data
-
-```{r sample-viruses}
-vseed = 132432
-
-pd_data = tibble(muIC50_1 = -3, sigIC50_1 = 0.5, omega_1 = 0.65,
-                 muIC50_2 = -2, sigIC50_2 = 0.5, omega_2 = 0.8)
-viral_panel = .sample_IC50s(500 - length(IC50_list), pd_data, virus_seed = vseed) %>%
-  mutate(mark = F) %>%
-  bind_rows( map_df(IC50_list, ~(tibble(IC50_1 = .x[1], IC50_2 = .x[2], mark = T))))
-
-(
-  viral_panel %>%
-    mutate_if(is.numeric, ~ (if_else(.x > 10, 10, .x))) %>%
-    ggplot(aes(
-      x = IC50_1,
-      y = IC50_2,
-      colour = factor(mark)
-    )) +
-    geom_point(aes(alpha = factor(mark))) +
-    scale_x_log10("IC50A") +
-    scale_y_log10("IC50B") +
-    scale_color_manual(guide = F, values = c("black", "red")) +
-    scale_alpha_manual(guide = F, values = c(0.5, 1)) +
-    geom_abline()
-)  %>%
-  ggExtra::ggMarginal(type = "histogram")
-
-```
-
-## Real data
-
-incomplete
-
-```{r use-real-data, eval = F}
-
-ic50_cutoff = 10
-
-catnap_dat_raw = read_rds("output/processed_catnap_assay.rds") 
-catnap_dat = catnap_dat_raw %>%
-  subset(Antibody  %in% c("10-1074", "3BNC117","PGDM1400", "PGT121")) %>%
-  group_by(Virus, Reference) %>%
-  mutate(
-    total_ab = n(),
-    clean_IC50 = if_else(clean_IC50 >= ic50_cutoff, Inf, clean_IC50),
-    clean_IC50_plot = if_else(clean_IC50 >= ic50_cutoff, ic50_cutoff * 10, clean_IC50)
-  ) %>%
-  filter(total_ab == 4) %>%
-  select(Virus, Antibody, clean_IC50, clean_IC50_plot, subtype, Reference) %>%
-  ungroup()
-
-# wide for pkpd analysis
-pd_data_set1 = catnap_dat %>%
-  subset(Antibody %in% c("10-1074", "3BNC117")) %>%
-  dplyr::select(-clean_IC50_plot) %>%
-  pivot_wider(names_from = "Antibody", values_from = "clean_IC50")
-
-pd_data_set2 = catnap_dat %>%
-  subset(Antibody %in% c("PGDM1400", "PGT121")) %>%
-  dplyr::select(-clean_IC50_plot) %>%
-  pivot_wider(names_from = "Antibody", values_from = "clean_IC50")
-
-
-```
-
-```{r, eval = F}
-
-drA = map2_df(conc_grid$a, conc_grid$b, function(i, j){
-  pd_data_set1 %>%
-    mutate(
-      BH = titer2BH(i/`10-1074`, j/`3BNC117`),
-      BH_ID50 = calc_BHID50(i/`10-1074`, j/`3BNC117`)) %>%
-    summarize(
-      mean_iip = mean(-log10(1 - BH)),
-      mean_ID50 = mean(BH_ID50),
-      mean_log10ID50 = mean(log10(BH_ID50))
-      ) %>%
-    mutate(mab_3bnc = j, mab_1074 = i)
-}) %>%
-  mutate(IIP_thresh = mean_iip < 2)
-
-drB = map2_df(conc_grid$a, conc_grid$b, function(i, j){
-  pd_data_set2 %>%
-    mutate(
-      BH = titer2BH(i/`PGT121`, j/`PGDM1400`),
-      BH_ID50 = calc_BHID50(i/`PGT121`, j/`PGDM1400`)) %>%
-    summarize(
-      mean_iip = mean(-log10(1 - BH)),
-      mean_ID50 = mean(BH_ID50),
-      mean_log10ID50 = mean(log10(BH_ID50))
-      ) %>%
-    mutate(mab_pgt = i, mab_pgdm = j)
-})
-
-color_range = c(min(drA$mean_iip, drB$mean_iip), max(drA$mean_iip, drB$mean_iip))
-
-```
-
-
-```{r, eval = F}
-
-pA = drA %>%
-  ggplot(aes(x = mab_3bnc, y = mab_1074, fill = mean_iip)) +
-  scale_x_log10(expand = c(0, 0)) +
-  scale_y_log10(expand = c(0, 0)) +
-  geom_tile() +
-  geom_contour(aes(z = mean_log10ID50), breaks = 1:3) +
-  metR::geom_label_contour(aes(z = mean_log10ID50), breaks = 1:3) +
-  geom_contour(aes(z = mean_iip), breaks = 2, colour = "black") +
-  scale_fill_viridis_c(limits = color_range) + 
-  geom_abline(linetype = "dashed") 
-pA
-
-pB = drB %>%
-  ggplot(aes(x = mab_pgt, y = mab_pgdm, fill = mean_iip)) +
-  scale_x_log10(expand = c(0, 0)) +
-  scale_y_log10(expand = c(0, 0)) +
-  geom_tile() +
-  geom_contour(aes(z = log10(mean_geoID50)), breaks = 1:3) +
-  metR::geom_label_contour(aes(z = mean_geoID50), breaks = 10^(1:3)) +
-  geom_contour(aes(z = mean_iip), breaks = 2, colour = "black") +
-  scale_fill_viridis_c(limits = color_range) + 
-  geom_abline(linetype = "dashed") 
-
-leg = get_legend(pB + theme(legend.position = "top"))
-
-plot_grid(leg,
-  plot_grid(pA + theme(legend.position = "none"), pB + theme(legend.position = "none")),
-  nrow = 2, rel_heights = c(2, 12)
-)
-
-```
