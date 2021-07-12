@@ -13,6 +13,8 @@ library(tidyverse)
 library(kableExtra)
 library(cowplot)
 library(here)
+library(scales)
+library(viridis)
 source(here("code/neutralization-funs.R"))
 source(here("code/onecmptPKPD-sims.R"))
 theme_set(theme_bw() + theme(legend.position = "top"))
@@ -100,7 +102,8 @@ conc_labeller = tibble(
 )
 
 #supp_IC50_list = list(c(0.05, 0.5), c(5, 0.5))
-supp_IC50_list = list(c(0.01, 0.5), c(1, 0.1))
+#supp_IC50_list = list(c(0.01, 0.5), c(1, 0.1))
+supp_IC50_list = list(c(1, 0.1))
 conc_range = 10^(seq(-1, 2.5,  length = 200))
 
 ```
@@ -143,22 +146,17 @@ id50_pred_pl = single_virus_example_long %>%
   ) %>%
   ggplot(aes(
     x = bNAb1 + bNAb2,
-    y = ID50,
-    linetype = ratio_lab
+    y = ID50
   )) +
-  geom_line(aes(color = ic50s)) +
+  geom_line(aes(color = ratio_lab, linetype = ic50s)) +
   scale_x_log10(breaks = conc_labeller$breaks, 
                 labels = conc_labeller$labels) +
   scale_y_log10() +
   coord_cartesian(ylim = c(1, 1000), xlim = c(0.1, 100)) +
   facet_grid(cols = vars(interaction),
              switch = "y") +
-  labs(
-      x = conc_title,
-      y = titer_title,
-      linetype = ratio_title,
-      colour = ic50_title
-    ) +
+  labs(x = conc_title, y = titer_title,
+       colour = ratio_title, linetype = ic50_title) +
   theme(legend.position = "top", strip.placement = "outside") 
 
 leg = get_legend(id50_pred_pl + 
@@ -182,16 +180,15 @@ neut_pred_pl = single_virus_example_long %>%
   ) %>%
   ggplot(aes(
     x = bNAb1 + bNAb2,
-    y = -log10(1-neut),
-    linetype = ratio_lab
+    y = -log10(1-neut)
   )) +
-  geom_line(aes(color = ic50s)) +
+  geom_line(aes(color = ratio_lab, linetype = ic50s)) +
   scale_x_log10(breaks = conc_labeller$breaks, labels = conc_labeller$labels) +
   coord_cartesian(xlim = c(0.1, 100)) +
   facet_grid(cols = vars(interaction),
              switch = "y") +
-  labs(x = conc_title, linetype = ratio_title, y = iip_title,
-       colour = ic50_title) +
+  labs(x = conc_title, y = iip_title,
+       colour = ratio_title, linetype = ic50_title) +
   theme(legend.position = "none", strip.placement = "outside") 
 
 neut_pred_pl
@@ -217,15 +214,14 @@ iip_titer_pl = single_virus_example_long %>%
     x = ID50,
     y = -log10(1-neut),
   )) +
-  geom_line(aes(color = ic50s, linetype = ratio_lab)) +
+  geom_line(aes(color = ratio_lab, linetype = ic50s)) +
   geom_line(data = titer_iip_pl_dat, linetype = "solid") +
   scale_x_log10() +
   facet_grid(cols = vars(interaction),
              switch = "y") +
   coord_cartesian(xlim = c(1, 1000)) +
-  labs(
-    x = titer_title, linetype = ratio_title, y = iip_title, colour = ic50_title
-  ) +
+    labs( x = titer_title, y = iip_title,
+       colour = ratio_title, linetype = ic50_title) +
   theme(legend.position = "none", strip.placement = "outside") 
 
 iip_titer_pl
@@ -237,7 +233,7 @@ iip_titer_pl
 
 main_figs = plot_grid(id50_pred_pl+theme(legend.position ="none"),
                                          neut_pred_pl, iip_titer_pl, nrow = 3,
-                      align = "v")
+                      align = "v", labels = LETTERS[1:3])
 
 plot_grid(leg, main_figs, nrow = 2, rel_heights = c(1.5,12))                      
                       
