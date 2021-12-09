@@ -247,6 +247,13 @@ empirical_pd_fit = drc::drm(neut ~ titer, data = pegu_dat,
                                                   "inflection", "asymmetry"),
                              fixed = c(NA, 0, 1, NA, NA)))
 
+
+empirical_4pl_fit = drc::drm(neut ~ titer, data = pegu_dat, 
+                        fct = drc::LL.4(names = c("slope", "lower", "upper",
+                                                  "inflection"),
+                             fixed = c(NA, 0, 1, NA)))
+
+
 pegu_pl = tibble(
   titer = 10^seq(-0.1, 4.5, length = 100),
   invitro = 1 - (1 + titer)^(-1),
