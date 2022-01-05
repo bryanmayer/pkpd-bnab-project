@@ -25,8 +25,11 @@ library(readxl)
 theme_set(theme_bw() + theme(legend.position = "top", legend.key.width = unit(1, "cm"),
                              legend.box = "vertical"))
 
-ic80_pe = read_excel("../data/nejm_fig3a.xlsx", col_names = c("ic80", "pe"))
-
+ic80_pe = read_excel("data/nejm_fig3a.xlsx", col_names = c("ic80", "pe")) %>% mutate(dose = "pooled")
+ic80_all = read_csv("data/dose10_scrape.csv", col_names = c("ic80", "pe")) %>% 
+  mutate(dose = "30") %>%
+   bind_rows(mutate(read_csv("data/dose30_scrape.csv", col_names = c("ic80", "pe")), dose = "10")) %>%
+  bind_rows(ic80_pe)
 ```
 
 
@@ -42,8 +45,7 @@ ic80_pe %>%
   ggplot(aes(x = ic80, y = pe)) +
   geom_point() +
   geom_line() +
-  scale_x_log10()
-
+  scale_x_log10() 
 
 ```
 
@@ -52,7 +54,7 @@ ic80_pe %>%
 ```{r conc-data}
 
 amp_conc_data = tribble(
-  ~dose_mgkg, ~study, ~n, ~peak, ~midpoint, ~trough,
+  ~dose, ~study, ~n, ~peak, ~midpoint, ~trough,
   10, 704, 895, 65.7, 23.1, 5.8,
   30, 704, 894, 212, 55.1, 15.4,
   10, 703, 642, 88.9, 19.8, 4.7,
@@ -74,7 +76,7 @@ amp_conc_avg = amp_conc_data %>%
   summarize(across(c(peak, midpoint, trough), ~sum(. * weight)), .groups = "drop")
 
 amp_conc_dose = amp_conc_data %>%
-  group_by(dose_mgkg) %>%
+  group_by(dose) %>%
   mutate(weight = n / sum(n)) %>%
   summarize(across(c(peak, midpoint, trough), ~sum(. * weight)), .groups = "drop")
 
@@ -98,6 +100,11 @@ amp_conc_grp %>%
   kable_styling(full_width = F) %>%
   add_header_above(c(" " = 1, "Wgt. mean conc. (ug/ml)" = 3))
 
+
+amp_conc_merge = amp_conc_avg %>%
+  mutate(dose = "pooled") %>%
+  bind_rows(mutate(amp_conc_dose, dose = as.character(dose)))
+
 ```
 
 ## Titer
@@ -110,11 +117,11 @@ neutralization = tibble(
   id50 = 4 * id80,
   time = "neutralization", 
   pe = 100 * 1/(1+1/(id50))
-  )
+  ) 
 
 titer_pe = ic80_pe %>%
   crossing(time = c("peak", "midpoint", "trough")) %>%
-  left_join(gather(amp_conc_avg, time, mean_conc, midpoint, peak, trough), by = "time") %>%
+  left_join(gather(amp_conc_avg, time, mean_conc, midpoint, peak, trough), by = c("time")) %>%
   mutate(
     id80 = mean_conc/ic80,
     id50 = 4 * id80
@@ -123,9 +130,9 @@ titer_pe = ic80_pe %>%
 ggplot(titer_pe, aes(x = id80, y = pe, colour = time)) +
   geom_point() +
   geom_line() +
-  geom_line(data = neutralization) +
+  geom_line(data = neutralization, colour = "black") +
   scale_x_log10() +
-  scale_color_discrete("", breaks = c("neutralization", "trough", "midpoint", "peak"))
+  scale_color_discrete("", breaks = c("neutralization", "trough", "midpoint", "peak")) 
 
 ```
 
@@ -136,9 +143,10 @@ With a Hill slope of 1 (linking IC50 and IC80), the ID50 titer is 4 times higher
 ggplot(titer_pe, aes(x = id50, y = pe, colour = time)) +
   geom_point() +
   geom_line() +
-  geom_line(data = neutralization) +
+  geom_line(data = neutralization, colour = "black") +
   scale_x_log10() +
-  scale_color_discrete("", breaks = c("neutralization", "trough", "midpoint", "peak"))
+  scale_color_discrete("", breaks = c("neutralization", "trough", "midpoint", "peak")) 
+
 
 ```
 
@@ -248,3 +256,46 @@ amp_pd_fit %>%
                      values = c(3, 1, 2)) 
 
 ```
+
+
+## Dose-specific analysis
+
+
+```{r ic80-pe-dose}
+
+ic80_all %>%
+  ggplot(aes(x = ic80, y = pe, colour = dose)) +
+  geom_point() +
+  geom_line() +
+  scale_x_log10() 
+
+```
+
+```{r titer-pe-dose}
+
+titer_pe_dose = ic80_all %>%
+  crossing(time = c("peak", "midpoint", "trough")) %>%
+  left_join(gather(amp_conc_merge, time, mean_conc, midpoint, peak, trough), by = c("time", "dose")) %>%
+  mutate(
+    id80 = mean_conc/ic80,
+    id50 = 4 * id80
+  ) 
+
+ggplot(titer_pe_dose, aes(x = id80, y = pe, colour = dose)) +
+  geom_point() +
+  geom_line() +
+  geom_line(data = neutralization, colour = "black") +
+  scale_x_log10() +
+  #scale_color_discrete("", breaks = c("neutralization", "trough", "midpoint", "peak")) +
+  facet_wrap(~time)
+
+ggplot(titer_pe_dose, aes(x = id50, y = pe, colour = dose)) +
+  geom_point() +
+  geom_line() +
+  geom_line(data = neutralization, colour = "black") +
+  scale_x_log10() +
+  #scale_color_discrete("", breaks = c("neutralization", "trough", "midpoint", "peak")) +
+  facet_wrap(~time)
+
+```
+

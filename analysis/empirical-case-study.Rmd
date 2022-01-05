@@ -9,7 +9,7 @@ editor_options:
 
 # Overview
 
-In this case study, we perform ratio optimization on two bnabs, 3BNC117 and 10-1074, in clinical development with PK profiles described previously, then repeat the exercise on theoretical LS variants of these antibodies by extending their half-live by 2-fold: 3BNC117-T and 10-1074-T. Lastly, we optimize for a three combination trial including VRC07-523LS (cite). In this case study, we optimize specifically for a correlate derived from the AMP vaccine studies by looking at mean viral coverage with IIP > 2 for the four proposed interaction models. For the triple combination, minimum neutralization is assessed using the median result of the three antibodies against a given virus; i.e., at least two must neutralize the virus at the IIP > 2 threshold. For these theoretical trials, we consider a simple design of 600 mg administered subcutaneously in a 3 month follow-up window.
+In this case study, we perform ratio optimization on three bnabs, 3BNC117, 10-1074, and  VRC07-523LS. We use theoretical LS variants of these antibodies by extending their half-live by 2-fold: 3BNC117-T and 10-1074-T. We optimize specifically using potency reduction dose-response relationships derived from Pegu and AMP studies. The protection is estimates for each bnab and combined using an independence model (ie, Bliss-Hill). For these theoretical trials, we consider a simple design of 600 mg administered subcutaneously with a 3 month follow-up window.
 
 # PK for parental, -T variants, and VRC07-523LS
 
@@ -20,6 +20,7 @@ The PK for 3BNC117 and 10-1074 comes from [citation]. In brief, the PK parameter
 
 library(tidyverse)
 library(kableExtra)
+library(readxl)
 library(cowplot)
 library(viridis)
 theme_set(theme_bw())
@@ -49,8 +50,8 @@ ic50_title = expression(paste("IC"[50]," (", mu, "g/mL)"))
 
 ```{r opt-flags-setup}
 # the optimizations are slow so don't want to run everytime
-opt_2bnab_flag = !file.exists("output/double-opt.rda")
-opt_3bnab_flag = !file.exists("output/triple-opt.rda")
+opt_2bnab_flag = !file.exists("output/double-opt.rda")  | !file.exists("output/double-opt-amp.rda")
+opt_3bnab_flag = !file.exists("output/triple-opt.rda") | !file.exists("output/triple-opt-amp.rda")
 ```
 
 ```{r load-pk, message = F, warning = F}
@@ -141,8 +142,9 @@ man_pk_pl
 
 ```
 
-
 # PD
+
+## CATNAP data
 
 ```{r catnap-profile}
 
@@ -223,18 +225,19 @@ ic50_dist = catnap_dat %>%
     theme_bw() +
   theme(plot.margin = unit(c(0,0,0.1,0), "lines"), 
     axis.title.y = element_text(size = 10),
-    axis.text.x = element_text(size = 8),
+    axis.text.x = element_text(size = 10),
     #text = element_text(size = 11),
     strip.text = element_blank(),
         legend.position = "none") 
 
 ic50_pl = cowplot::plot_grid(res_pl, ic50_dist, nrow = 2, align = "v",
-                   rel_heights = c(1.25,2))
+                   rel_heights = c(1.4,2))
 
 ic50_pl
 
 ```
 
+## Pegu 
 
 ```{r pegu-curve}
 
@@ -242,11 +245,11 @@ pegu_dat = tibble(
   titer = c(91, 219, 685),
   neut = c(0.5, 0.75, 0.95)
 )
+
 empirical_pd_fit = drc::drm(neut ~ titer, data = pegu_dat, 
                         fct = drc::LL.5(names = c("slope", "lower", "upper",
                                                   "inflection", "asymmetry"),
                              fixed = c(NA, 0, 1, NA, NA)))
-
 
 empirical_4pl_fit = drc::drm(neut ~ titer, data = pegu_dat, 
                         fct = drc::LL.4(names = c("slope", "lower", "upper",
@@ -289,6 +292,126 @@ pegu_pl
 
 ```
 
+## AMP
+
+```{r amp-curve}
+
+amp_conc_data = tribble(
+  ~dose_mgkg, ~study, ~n, ~peak, ~midpoint, ~trough,
+  10, 704, 895, 65.7, 23.1, 5.8,
+  30, 704, 894, 212, 55.1, 15.4,
+  10, 703, 642, 88.9, 19.8, 4.7,
+  30, 703, 645, 257.9, 44.7, 8.3
+)
+
+amp_conc_avg =  amp_conc_data %>%
+  mutate(weight = n / sum(n)) %>%
+  summarize(across(c(peak, midpoint, trough), ~sum(. * weight)), .groups = "drop")
+
+amp_dat_all = read_excel("data/nejm_fig3a.xlsx", col_names = c("ic80", "pe")) %>%
+  crossing(time = c("peak", "midpoint", "trough")) %>%
+  left_join(gather(amp_conc_avg, time, mean_conc, midpoint, peak, trough), by = "time") %>%
+  mutate(
+    neut = pe/100,
+    id80 = mean_conc/ic80,
+    titer = 4 * id80
+  ) 
+
+amp_dat = dplyr::filter(amp_dat_all, time == "midpoint")
+
+amp_pd_fit = drc::drm(neut ~ titer, data = amp_dat,
+                        fct = drc::LL.5(names = c("slope", "lower", "upper",
+                                                  "inflection", "asymmetry"),
+                             fixed = c(NA, 0, 1, NA, NA)))
+
+# 370
+amp_id50 = drc::ED(amp_pd_fit, 50, display = F)[[1]]
+amp_id95 = drc::ED(amp_pd_fit, 95, display = F)[[1]]
+
+
+amp_pl = tibble(
+  titer = 10^seq(-0.1, 4.5, length = 100),
+  invitro = 1 - (1 + titer)^(-1),
+  empirical = predict(amp_pd_fit, data.frame(titer = titer)),
+  potency =  1 - (1 + titer/370)^(-1)
+) %>%
+  gather(model, neut, invitro, empirical, potency) %>%
+  ggplot(aes(x = titer, y = neut * 100)) +
+  geom_line(aes(colour = model, linetype = model)) +
+  geom_point(data = amp_dat) +
+  scale_y_continuous(breaks = 0:10 * 10) +
+  labs(y = "empirical protection (%) (AMP)", 
+       colour = "", linetype = "") +
+  scale_color_manual(breaks = c("invitro", "empirical", "potency"), 
+                     labels = c("In vitro neutralization", "5PL", 
+                                "Potency reduction"),
+                     values = c("black", "black", "gray")) +
+  scale_linetype_manual(breaks = c("invitro", "empirical", "potency"), 
+                     labels = c("In vitro neutralization", "5PL", 
+                                "Potency reduction"),
+                     values = c(2, 1, 1)) +
+  scale_x_log10(breaks = 10^(0:4), labels = as.character(10^(0:4))) +
+  theme(axis.text.x = element_text(size = 8), 
+        legend.key.width = unit(0.5, "cm"), 
+        legend.key.height =  unit(0.5, "cm"),
+        legend.margin = margin(t = -10,0,0,0),
+        legend.box.background = element_rect(colour = "black"),
+        legend.position = c(1, 0), legend.text = element_text(size = 7),
+        legend.direction = "vertical", 
+        legend.justification = c(1.01, -.10))
+
+amp_pl
+
+```
+
+
+```{r amp-pegu-dr}
+
+dr_labels = tibble(
+  breaks = c("invitro", "pegu_empirical", "pegu_potency", "amp_empirical", "amp_potency"),
+  labels =  c("In vitro neutralization", "NHP 5PL", bquote("NHP potency reduction (" *rho*" = 91)"), 
+              "AMP 5PL", bquote("AMP potency reduction (" *rho*" = 370)"))
+)
+
+
+amp_pegu_dr = tibble(
+  titer = 10^seq(-0.1, 4.5, length = 100),
+  invitro = 1 - (1 + titer)^(-1),
+  pegu_empirical = predict(empirical_pd_fit, data.frame(titer = titer)),
+  pegu_potency =  1 - (1 + titer/91)^(-1),
+  amp_empirical = predict(amp_pd_fit, data.frame(titer = titer)),
+  amp_potency =  1 - (1 + titer/370)^(-1)
+) %>%
+  gather(model, neut, invitro:amp_potency) %>%
+  ggplot(aes(x = titer, y = neut * 100)) +
+  geom_line(aes(colour = model, linetype = model)) +
+  geom_point(data = pegu_dat, colour = "blue") +
+  geom_point(data = amp_dat, colour = "red") +
+  scale_y_continuous(breaks = 0:10 * 10) +
+  labs(y = "empirical protection (%)", 
+       colour = "", linetype = "") +
+  scale_color_manual(breaks = dr_labels$breaks, 
+                     labels = dr_labels$labels,
+                     values = c("black", "blue", alpha("blue", 1), "red", alpha("red", 1))
+                     ) +
+  scale_linetype_manual(breaks = dr_labels$breaks, 
+                     labels = dr_labels$labels,
+                     values = c(2, 1, 3, 1, 3)) +
+  scale_x_log10(breaks = 10^(0:4), labels = as.character(10^(0:4))) +
+  theme(axis.text.x = element_text(size = 8), 
+        legend.key.width = unit(0.5, "cm"), 
+        legend.key.height =  unit(0.5, "cm"),
+        legend.margin = margin(t = -10,0,0,0),
+        legend.box.background = element_rect(colour = "black"),
+        legend.position = c(1, 0), legend.text = element_text(size = 7),
+        legend.direction = "vertical", 
+        legend.justification = c(1.01, -.10))
+
+amp_pegu_dr
+
+```
+
+## Empirical DR
 
 ```{r empirical-dr}
 
@@ -296,7 +419,7 @@ conc_range = 10^(seq(-1, 3, length = 50))
 
 empirical_iip = map_df(conc_range, function(i) {
   pd_data %>%
-    mutate_if(is.numeric, ~ (-log10(1 - empirical_pd_fun(i / .x)))) %>%
+    mutate_if(is.numeric, ~ (-log10(1 - empirical_pd_fun(i / .x, mod5pl = empirical_pd_fit)))) %>%
     gather(analyte, iip, -subtype, -Reference, -Virus) %>%
     group_by(analyte) %>%
     summarize_at(vars(iip), 
@@ -306,7 +429,22 @@ empirical_iip = map_df(conc_range, function(i) {
                       upper95 = ~quantile(., 0.975))
                  ) %>%
     mutate(concentration = i,
-           outcome = "in vitro")
+           outcome = "Pegu est")
+}) 
+
+amp_iip = map_df(conc_range, function(i) {
+  pd_data %>%
+    mutate_if(is.numeric, ~ (-log10(1 - empirical_pd_fun(i / .x, mod5pl = amp_pd_fit)))) %>%
+    gather(analyte, iip, -subtype, -Reference, -Virus) %>%
+    group_by(analyte) %>%
+    summarize_at(vars(iip), 
+                 list(mean = mean,  median = median,
+                      min = min, max = max, 
+                      lower95 = ~quantile(., .025),
+                      upper95 = ~quantile(., 0.975))
+                 ) %>%
+    mutate(concentration = i,
+           outcome = "AMP est")
 }) 
 
 raw_iip = map_df(conc_range, function(i) {
@@ -321,17 +459,19 @@ raw_iip = map_df(conc_range, function(i) {
                       upper95 = ~quantile(., 0.975))
                  ) %>%
     mutate(concentration = i,
-           outcome = "in vivo")
+           outcome = "in vitro")
 }) 
 
 
 marginal_iip_pl = empirical_iip %>%
   bind_rows(raw_iip) %>%
+  bind_rows(amp_iip) %>%
   ggplot(aes(x = concentration, y = mean, colour = analyte, linetype = outcome)) +
   geom_hline(yintercept = -log10(1 - c(0.5, 0.95, 0.99)), linetype = "dotted", size = 0.25) +
   geom_line() +
   scale_x_log10(breaks = 10^(-1:3), labels = as.character(10^(-1:3))) +
   labs(y = "mean iip", linetype = "") +
+  scale_linetype_manual(breaks = c("AMP est", "Pegu est", "in vitro"), values = c(1,4,3)) +
   annotate("text", x = 1000, y = -log10(1 - c(0.5, 0.95, 0.99)), 
            label = c("50%", "95%", "99%"), vjust = 0) +
   theme(legend.box =  "vertical")
@@ -354,27 +494,37 @@ empirical_coverage = map_df(conc_range, function(i) {
     group_by(analyte) %>%
     summarize_at(vars(titer), 
                  list(
-                   coverage_1 = ~(mean(.x > 1)),
-                   coverage_50 = ~(mean(.x > 91)),
-                   coverage_95 = ~(mean(.x > 685))
-                 )
+                   neut_50 = ~(mean(.x > 1)),
+                   pegu_50 = ~(mean(.x > 91)),
+                   amp_50 = ~(mean(.x > amp_id50)),
+                   neut_95 = ~(mean(.x > neut2titer(.95))),
+                   pegu_95 = ~(mean(.x > 685)),
+                   amp_95 = ~(mean(.x > amp_id95))
+                   )
                  ) %>%
     mutate(concentration = i)
 }) %>%
-  gather(coverage, prop, coverage_1, coverage_50, coverage_95) %>%
+  gather(coverage, prop, neut_50:amp_95) %>%
   separate(coverage, into = c("outcome", "level"), sep = "_") %>%
   mutate(
-    level_lab = if_else(level == "1",
-                        "In vitro neutralization > 50%",
-                        paste0("In vivo protection > ", level, "%"))
+    prot_lab = factor(outcome,
+      levels = c("neut", "pegu", "amp"),
+      labels =  c("In vitro neutralization", "In vivo protection (NHP)", "In vivo protection (AMP)")
+    ),
+    level_lab = case_when(
+      level == "50" ~ "% viruses > 50%",
+      level == "95" ~ "% viruses > 95%"
+    )
   )
 
 marg_cov_pl = empirical_coverage %>%
   ggplot(aes(x = concentration, y = prop * 100, colour = analyte)) +
   geom_step() +
   scale_x_log10(breaks = 10^(-1:3), labels = as.character(10^(-1:3))) +
-  labs(y = "% of viruses", x = expression(paste("concentration (", mu, "g/mL)"))) +
-  facet_wrap(~level_lab)
+  labs(y = "", x = expression(paste("concentration (", mu, "g/mL)"))) +
+  facet_grid(level_lab~prot_lab, switch = "y") +
+  theme(strip.placement = "outside", 
+        strip.text.y = element_text(size = 12), strip.background.y = element_blank())
 
 marg_cov_pl
 
@@ -385,6 +535,12 @@ marg_cov_pl
 Use independence model: 1 - prod (1 - x)
 
 ```{r pkpd-parms}
+
+models = tibble(
+  model = list(empirical_pd_fit, amp_pd_fit),
+  label = c("pegu", "amp")
+)
+
 dose_ratio_list = seq(0, 1, length = 15)
 
 outcome_labels = tibble(
@@ -424,6 +580,7 @@ triple_parms = all_pk %>%
 
 ```{r full-combo-search, eval = opt_2bnab_flag}
 
+# this is the original Pegu runs
 combo_pkpd_full = map_df(1:nrow(full_double_analyte_list), function(i_row) {
   
   i = full_double_analyte_list$mab1[i_row]
@@ -449,7 +606,50 @@ combo_pkpd_full = map_df(1:nrow(full_double_analyte_list), function(i_row) {
            mab_vrc07 = `VRC07-523LS`) %>%
     group_by(time) %>%
     nest() %>%
-    triple_pd_calc(pd_data) %>%
+    triple_pd_calc(pd_data, mod5pl = empirical_pd_fit) %>%
+    select(-data,-protection_res) %>%
+    unnest(neut_summary) %>%
+    ungroup() %>%
+    mutate(
+      total_dose = 600,
+      total_active = total_active,
+      analyte_set = analyte_set,
+      active_mabs = paste(active_mabs, collapse = ":"),
+      ratio_3bnc = i,
+      ratio_1074 = j,
+      ratio_vrc = 1 - (i + j)
+    )
+})  %>%
+  mutate(total_active_check = rowSums(cbind(ratio_3bnc > 0, ratio_1074 > 0, ratio_vrc > 0)))
+with(combo_pkpd_full, ftable(active_mabs, analyte_set))
+
+# this is the AMP runs, this is coded redundantly because it meets a paper revision request
+combo_pkpd_amp = map_df(1:nrow(full_double_analyte_list), function(i_row) {
+  
+  i = full_double_analyte_list$mab1[i_row]
+  j = full_double_analyte_list$mab2[i_row]
+  analyte_set = full_double_analyte_list$mab_set[i_row]
+  
+  pk_setup = triple_parms %>%
+    mutate(dose = if_else(
+      analyte == "3BNC117-T",
+      600 * i,
+      if_else(analyte == "10-1074-T", 600 * j,
+              600 * (1 - (i + j)))
+    )) %>%
+    check_dose_calc(total_dose = 600)
+  
+  active_mabs = filter(pk_setup, dose > 0)[['analyte']]
+  total_active = length(active_mabs)
+  pk_setup %>%
+    create_pk(pk_window) %>%
+    pivot_wider(values_from = conc, names_from = analyte) %>%
+    rename(mab_3bnc = `3BNC117-T`,
+           mab_1074 = `10-1074-T`,
+           mab_vrc07 = `VRC07-523LS`) %>%
+    group_by(time) %>%
+    nest() %>%
+    triple_pd_calc(pd_data, mod5pl = amp_pd_fit) %>%
     select(-data,-protection_res) %>%
     unnest(neut_summary) %>%
     ungroup() %>%
@@ -465,14 +665,19 @@ combo_pkpd_full = map_df(1:nrow(full_double_analyte_list), function(i_row) {
 })  %>%
   mutate(total_active_check = rowSums(cbind(ratio_3bnc > 0, ratio_1074 > 0, ratio_vrc > 0)))
 
-with(combo_pkpd_full, ftable(active_mabs, analyte_set))
 
 save(combo_pkpd_full, file = "output/double-opt.rda")
+save(combo_pkpd_amp, file = "output/double-opt-amp.rda")
 
 ```
 
 ```{r load-dbl-opt, eval = !opt_2bnab_flag}
 load("output/double-opt.rda")
+load("output/double-opt-amp.rda")
+
+combo_pkpd_all = mutate(combo_pkpd_full, model = "pegu") %>%
+  bind_rows(mutate(combo_pkpd_amp, model = "amp"))
+
 ```
 
 
@@ -529,7 +734,9 @@ mab_assign = tibble(
   mabs_pl =  c("3BNC117-T", "10-1074-T", "VRC07\n-523LS")
 )
 
-triple_pkpd_fixed = map2_df(triple_ratio_list$mab1, triple_ratio_list$mab2, function(i, j) {
+triple_pkpd_fixed = map2_df(models$model, models$label, function(mod, mod_lab){
+  
+  map2_df(triple_ratio_list$mab1, triple_ratio_list$mab2, function(i, j) {
   
   pk_setup = triple_parms %>%
     mutate(dose = if_else(
@@ -550,7 +757,7 @@ triple_pkpd_fixed = map2_df(triple_ratio_list$mab1, triple_ratio_list$mab2, func
            mab_vrc07 = `VRC07-523LS`) %>%
     group_by(time) %>%
     nest() %>%
-    triple_pd_calc(pd_data) %>%
+    triple_pd_calc(pd_data, mod5pl = mod) %>%
     select(-data,-protection_res) %>%
     unnest(neut_summary) %>%
     ungroup() %>%
@@ -562,10 +769,13 @@ triple_pkpd_fixed = map2_df(triple_ratio_list$mab1, triple_ratio_list$mab2, func
       ratio_1074 = j,
       ratio_vrc = 1 - (i + j)
     )
-})  %>%
-  mutate(total_active_check = rowSums(cbind(ratio_3bnc > 0, ratio_1074 > 0, ratio_vrc > 0)))
+}) %>%
+  mutate(
+    total_active_check = rowSums(cbind(ratio_3bnc > 0, ratio_1074 > 0, ratio_vrc > 0)),
+    model = mod_lab
+    )
+})
 
-#, .parallel = T)
 
 ```
 
@@ -577,6 +787,8 @@ opt_outcomes = crossing(
   endpoints = c("trough", "auc")
 )
 
+# Pegu
+
 combo_opt = map2_df(opt_outcomes$outcomes, opt_outcomes$endpoints, function(out, end){
   map_df(1:3, function(i){
     opt = optimize(combo_opt_fun,
@@ -587,6 +799,7 @@ combo_opt = map2_df(opt_outcomes$outcomes, opt_outcomes$endpoints, function(out,
       pd_data = pd_data,
       outcome_var = out,
       pk_endpoint = end,
+      mod5pl = empirical_pd_fit,
       remove_mab = i
     )
     #browser()
@@ -609,7 +822,8 @@ combo_opt = map2_df(opt_outcomes$outcomes, opt_outcomes$endpoints, function(out,
 triple_opt = map2_df(opt_outcomes$outcomes, opt_outcomes$endpoints, function(out, end){
   opt = optim(c(-2.381427, 0.705), combo_opt_fun, 
               pk_parms = triple_parms, total_dose = 600, pk_window = pk_window,
-              pd_data = pd_data, outcome_var = out, pk_endpoint = end)
+              pd_data = pd_data, outcome_var = out, pk_endpoint = end, mod5pl = empirical_pd_fit
+)
   #browser()
   opt_ratios = calc_opt_ratios(opt$par)
   
@@ -625,13 +839,78 @@ triple_opt = map2_df(opt_outcomes$outcomes, opt_outcomes$endpoints, function(out
   
 })
 
+# AMP, structure follows revision edits
+
+combo_opt_amp = map2_df(opt_outcomes$outcomes, opt_outcomes$endpoints, function(out, end){
+  map_df(1:3, function(i){
+    opt = optimize(combo_opt_fun,
+      interval = c(-10, 10),
+      pk_parms = triple_parms,
+      total_dose = 600,
+      pk_window = pk_window,
+      pd_data = pd_data,
+      outcome_var = out,
+      pk_endpoint = end,
+      mod5pl = amp_pd_fit,
+      remove_mab = i
+    )
+    #browser()
+    opt_ratios = organize_opt_ratios(calc_opt_ratios(opt$minimum), remove_mab = i)
+    
+    tibble(
+      outcome = out,
+      trough_time = max(pk_window),
+      endpoint = end,
+      analytes = paste0(mab_assign$mabs[-i], collapse = ":"),
+      ratio_3bnc = opt_ratios[1],
+      ratio_1074 = opt_ratios[2],
+      ratio_vrc = opt_ratios[3],
+      value = -opt$objective
+    )
+    
+  })
+})
+
+triple_opt_amp = map2_df(opt_outcomes$outcomes, opt_outcomes$endpoints, function(out, end){
+  opt = optim(c(-2.381427, 0.705), combo_opt_fun, 
+              pk_parms = triple_parms, total_dose = 600, pk_window = pk_window,
+              pd_data = pd_data, outcome_var = out, pk_endpoint = end,  mod5pl = amp_pd_fit)
+  #browser()
+  opt_ratios = calc_opt_ratios(opt$par)
+  
+  tibble(
+    outcome = out,
+    trough_time = max(pk_window),
+    endpoint = end,
+    ratio_3bnc = opt_ratios[1],
+    ratio_1074 = opt_ratios[2],
+    ratio_vrc = opt_ratios[3],
+    value = -opt$value
+  )
+  
+})
+
+
 save(combo_opt, triple_opt, file = "output/triple-opt.rda")
+save(combo_opt_amp, triple_opt_amp, file = "output/triple-opt-amp.rda")
 
 ```
 
-```{r load-opt, eval = !opt_3bnab_flag}
+```{r load-triple-opt, eval = !opt_3bnab_flag}
 
 load("output/triple-opt.rda")
+load("output/triple-opt-amp.rda")
+
+all_triple_opt = triple_opt %>%
+  mutate(model = "pegu", combo = "3-mab") %>%
+  bind_rows(mutate(triple_opt_amp, model = "amp", combo = "3-mab"))
+
+
+all_opt = all_triple_opt %>%
+  bind_rows(mutate(combo_opt, model = "pegu", combo = "2-mab")) %>%
+  bind_rows(mutate(combo_opt_amp, model = "amp", combo = "2-mab"))
+  
+
 
 ```
 
@@ -639,20 +918,21 @@ load("output/triple-opt.rda")
 
 ```{r opt-res-table}
 
-combo_opt %>%
-  bind_rows(triple_opt) %>%
+all_opt %>%
   dplyr::filter(str_detect(outcome, "coverage")) %>%
-  dplyr::select(-trough_time, -analytes) %>%
+  dplyr::select(combo, endpoint, outcome, model, everything(), -trough_time, -analytes) %>%
   mutate(outcome = paste0(str_remove(outcome, "coverage_"), "%"),
          value = round(value * 100)
          ) %>%
   mutate_at(vars(contains("ratio")), round, digits = 2) %>%
   rename(`% viruses` = value) %>%
+  arrange(combo, outcome, endpoint, model) %>%
+  dplyr::select(-combo) %>%
   write_csv("output/empirical-opt-ratios.csv") %>%
   kable(caption = "optimal ratios") %>%
   kable_styling(full_width = F) %>%
-  pack_rows("Two mAb", 1, 12) %>%
-  pack_rows("Three mAb", 13, 16)
+  pack_rows("Two mAb", 1, 24) %>%
+  pack_rows("Three mAb", 25, 32)
 
 ```
 
@@ -666,12 +946,13 @@ marg_res = triple_pkpd_fixed %>%
   gather(analyte, ratio, contains("ratio")) %>%
   dplyr::filter(ratio == 1) %>%
   separate(analyte, into = c("tmp", "ratio_cat")) %>%
-  group_by(outcome, ratio_cat) %>%
+  group_by(outcome, ratio_cat, model) %>%
   arrange(time) %>%
   summarize(
     trough_time = max(time),
     trough = value[which.max(time)],
     auc = pracma::trapz(time, value)/trough_time
+    ,.groups = "drop"
   ) %>%
   gather(endpoint, value, trough, auc) %>%
   mutate(
@@ -689,7 +970,7 @@ marg_res %>%
   dplyr::filter(str_detect(outcome, "coverage")) %>%
   ggplot(aes(x = ratio_cat, y = value, colour = outcome2, shape = endpoint)) +
   geom_point() +
-  facet_wrap(~category)
+  facet_wrap(~model)
 
 ```
 
@@ -701,15 +982,16 @@ marg_res %>%
 # unique(combo_pkpd_full$active_mabs)
 # with(combo_pkpd_full, ftable(active_mabs))
 
-full_combo_res = combo_pkpd_full %>%
+full_combo_res = combo_pkpd_all %>%
   gather(outcome, value, mean_iip, coverage_50, coverage_95) %>%
-  group_by_at(vars(outcome, analyte_set, contains("ratio"))) %>%
+  group_by_at(vars(outcome, analyte_set, model, contains("ratio"))) %>%
   arrange(time) %>%
   summarize(
     max_ratio = max(c(ratio_3bnc, ratio_1074, ratio_vrc)),
     trough_time = max(time),
     trough = value[which.max(time)],
     auc = pracma::trapz(time, value)/trough_time
+    , .groups = "drop"
   ) %>%
   gather(endpoint, value, trough, auc) %>%
   mutate(
@@ -722,9 +1004,9 @@ full_combo_res = combo_pkpd_full %>%
 
 full_combo_res %>%
   dplyr::filter(str_detect(outcome, "coverage"))   %>%
-  ggplot(aes(x = ratio, y = value, colour = outcome, shape = endpoint)) +
+  ggplot(aes(x = ratio, y = value, colour = outcome, shape = endpoint, linetype = model)) +
   geom_line() +
-  facet_wrap(~analytes, nrow = 1)
+  facet_grid(endpoint ~ analytes)
 
 ```
 
@@ -733,13 +1015,14 @@ full_combo_res %>%
 combo_res_summary = triple_pkpd_fixed %>%
   filter(total_active == 2) %>%
   gather(outcome, value, mean_iip, coverage_50, coverage_95) %>%
-  group_by_at(vars(outcome, active_mabs, contains("ratio"))) %>%
+  group_by_at(vars(model, outcome, active_mabs, contains("ratio"))) %>%
   arrange(time) %>%
   summarize(
     max_ratio = max(c(ratio_3bnc, ratio_1074, ratio_vrc)),
     trough_time = max(time),
     trough = value[which.max(time)],
-    auc = pracma::trapz(time, value)/trough_time
+    auc = pracma::trapz(time, value)/trough_time,
+    .groups = "drop"
   ) %>%
   gather(endpoint, value, trough, auc) 
 
@@ -755,11 +1038,12 @@ combo_res_opt = combo_opt %>%
     )
 
 combo_res_best = full_combo_res %>%
-  group_by(analytes, outcome, endpoint) %>%
+  group_by(analytes, model, outcome, endpoint) %>%
   summarize(
     ratio_cat = "optimal",
     ratio = ratio[which.max(value)],
-    value = max(value)
+    value = max(value),
+    .groups = "drop"
     ) %>%
   mutate(
     category = if_else(
@@ -796,12 +1080,11 @@ all_combo = combo_res_fixed %>%
          outcome2 = outcome_factor(outcome)
 )
 
-
 all_combo %>%
   dplyr::filter(str_detect(outcome, "coverage"))   %>%
   ggplot(aes(x = ratio_cat, y = value, colour = outcome2, shape = endpoint)) +
   geom_point() +
-  facet_wrap(~category, nrow = 1)
+  facet_grid(model~category)
 
 ```
 
@@ -810,10 +1093,12 @@ all_combo %>%
 
 full_combo_res %>%
   dplyr::filter(str_detect(outcome, "coverage"))   %>%
-  ggplot(aes(x = ratio, y = value, colour = outcome, shape = endpoint)) +
+  ggplot(aes(x = ratio, y = value, colour = as.factor(parse_number(outcome)), linetype = endpoint)) +
   geom_line() + 
-  geom_point(data = dplyr::filter(all_combo, str_detect(outcome, "coverage")), aes(x = ratio)) +
-  facet_wrap(~analytes, nrow = 1)
+  geom_point(data = dplyr::filter(all_combo, str_detect(outcome, "coverage")), aes(x = ratio, shape = ratio_cat)) +
+  facet_grid(model~analytes) +
+  labs(colour  ="coverage_pct") +
+  theme(legend.position = "right", legend.title = element_text(size= 8), legend.text = element_text(size= 8))
 
 ```
 
@@ -822,14 +1107,15 @@ full_combo_res %>%
 triple_res_summary = triple_pkpd_fixed %>%
   filter(total_active == 3) %>%
   gather(outcome, value, mean_iip, coverage_50, coverage_95) %>%
-  group_by_at(vars(outcome, active_mabs, contains("ratio"))) %>%
+  group_by_at(vars(model, outcome, active_mabs, contains("ratio"))) %>%
   arrange(time) %>%
   summarize(
     min_ratio = min(c(ratio_3bnc, ratio_1074, ratio_vrc)),
     max_ratio = max(c(ratio_3bnc, ratio_1074, ratio_vrc)),
     trough_time = max(time),
     trough = value[which.max(time)],
-    auc = pracma::trapz(time, value)/trough_time
+    auc = pracma::trapz(time, value)/trough_time,
+    .groups = "drop"
   ) %>%
   gather(endpoint, value, trough, auc) 
 
@@ -842,7 +1128,7 @@ triple_res_fixed = triple_res_summary %>%
     ) %>%
   mutate(category = "3BNC117-T:10-1074-T:VRC07-523LS")
 
-triple_res_opt = triple_opt %>%
+triple_res_opt = all_triple_opt %>%
   mutate(
     ratio_cat = "optimal",
     value = if_else(str_detect(outcome, "coverage"), value * 100, value),
@@ -855,14 +1141,14 @@ triple_res_fixed %>%
   dplyr::filter(str_detect(outcome, "coverage")) %>%
   ggplot(aes(x = ratio_cat, y = value, colour = outcome2, shape = endpoint)) +
   geom_point() +
-  facet_wrap(~category)
+  facet_grid(model~category)
   
 
 ```
 
 ### Manuscript figures
 
-```{r orig-full-opt-pl, width = 8}
+```{r orig-full-opt-pl, fig.width = 8}
 
 succinct_main_fig = marg_res %>%
   bind_rows(all_combo) %>%
@@ -875,7 +1161,7 @@ succinct_main_fig = marg_res %>%
   geom_point(size = 2.5) +
   scale_y_continuous(limits = c(0, 100)) +
   labs(x = "", colour = "", shape = "", y = "% of viruses") +
-  facet_grid(cols = vars(category), scale = "free_x", space = "free_x", switch = "x") +
+  facet_grid(cols = vars(category), rows = vars(model), scale = "free_x", space = "free_x", switch = "x") +
   theme(strip.placement = "outside", strip.background = element_blank(),
         legend.direction = "vertical", axis.text.x = element_text(size = 8))
 
@@ -884,15 +1170,22 @@ succinct_main_fig
 
 ```
 
+
+```{r dose-response-fig,  fig.height=6, fig.width=6}
+
+amp_pegu_dr
+
+```
+
 ```{r empirical-paper-marginal, fig.height=9, fig.width=7.5}
 
 top_row = plot_grid(man_pk_pl, ic50_pl + theme(axis.text.x = element_text()), 
-                    pegu_pl + theme(), 
                     align = "h", axis = "t",  nrow = 1,
-                    rel_widths = c(1, 1.15, 1), 
-                    labels = c("A", "B", "C"), vjust = 1, hjust = 0)
+                    rel_widths = c(1, 1),
+                    labels = c("A", "B"), vjust = 1, hjust = 0)
 
-plot_grid(top_row, marg_cov_pl + theme(legend.position = "none"), labels = c("", "D"), nrow = 2)
+plot_grid(top_row, marg_cov_pl + theme(legend.position = "none"), labels = c("", "C"), 
+          rel_heights = c(1.75, 2), nrow = 2)
 
 ```
 
@@ -907,61 +1200,83 @@ yaxis_off = theme(axis.title.y = element_blank(),
 combo_best_pl = dplyr::filter(combo_res_best, str_detect(outcome, "coverage")) %>%
    mutate(analytes2 = str_replace_all(analytes, ":", ":\n"))
  
-single_mab_pl = marg_res %>%
-  dplyr::filter(str_detect(outcome, "coverage")) %>%
-  mutate(endpoint2 = paste(endpoint, "(% of viruses)")) %>%
-  ggplot(aes(x = ratio_cat, y = value, colour = outcome2)) +
+single_mab_pl = map(unique(marg_res$endpoint), function(x){
+  marg_res %>%
+  dplyr::filter(str_detect(outcome, "coverage") & endpoint == x) %>%
+  mutate(outcome3 = paste(x, paste0("(",outcome2,")"))) %>%
+  ggplot(aes(x = ratio_cat, y = value, colour = model)) +
   geom_point(size = 2) +
   scale_y_continuous(limits = c(0, 100), breaks = 0:4*25) +
-  labs(x = "", colour = "", shape = "", y = "% of viruses") +
-  facet_grid(cols = vars(category), rows = vars(endpoint2), scale = "free_x", space = "free_x", 
+  labs(x = "", shape = "", y = "% of viruses") +
+  scale_color_discrete("Protection correlate", breaks = c("pegu", "amp"),
+                       labels = c("NHP (Pegu et al.)", "AMP (Corey et al.)")) +
+  facet_grid(cols = vars(category), rows = vars(outcome3), scale = "free_x", space = "free_x", 
              switch = "both") +
     theme(strip.placement = "outside", strip.background = element_blank(),
-        legend.direction = "horizontal", axis.text.x = element_text(size = 6)) +
+        legend.direction = "horizontal", axis.text.x = element_text(size = 6),
+        strip.text.y = element_text(size = 8)) +
   labs(x = "", y = "") 
+})
 
 
-pl_leg = get_legend(single_mab_pl)
-single_mab_pl + theme(legend.position = "none")
+pl_leg = get_legend(single_mab_pl[[1]])
+single_mab_pl[[2]] + theme(legend.position = "none") 
 
-combo_mab_pl = full_combo_res %>%
-  dplyr::filter(str_detect(outcome, "coverage")) %>%
+combo_mab_pl = map(unique(marg_res$endpoint), function(x){
+  full_combo_res %>%
+  dplyr::filter(str_detect(outcome, "coverage") & endpoint == x) %>%
   mutate(analytes2 = str_replace_all(analytes, ":", ":\n")) %>%
-  ggplot(aes(x = ratio, y = value, colour = outcome)) +
+  ggplot(aes(x = ratio, y = value, colour = model)) +
   geom_line() + 
   scale_y_continuous(limits = c(0, 100), breaks = 0:4*25) +
-  geom_point(data = combo_best_pl, aes(x = ratio),
+  geom_point(data = dplyr::filter(combo_best_pl, endpoint == x), aes(x = ratio),
              shape = 21, size = 2) +
-  facet_grid(cols = vars(analytes2), rows = vars(endpoint), 
+  facet_grid(cols = vars(analytes2), rows = vars(outcome), 
              scale = "free_x", space = "free_x", switch = "x") +
   scale_x_continuous(breaks = 0.5, labels = "1:1") +
   theme(strip.placement = "outside", strip.background = element_blank(),
         legend.position = "none", axis.text.x = element_text(size = 8)) +
   labs(x = "", y = "") 
+})
 
-combo_mab_pl
+combo_mab_pl[[1]]
 
-triple_mab_pl = triple_res_opt %>%
+triple_mab_pl = map(unique(marg_res$endpoint), function(x){
+  triple_res_opt %>%
   bind_rows(triple_res_fixed) %>%
   mutate(category2 = stringi::stri_replace(category, fixed = ":", ":\n", mode = "last")) %>%
-  dplyr::filter(str_detect(outcome, "coverage")) %>%
-  ggplot(aes(x = ratio_cat, y = value, colour = outcome2)) +
+  dplyr::filter(str_detect(outcome, "coverage") & endpoint == x) %>%
+  ggplot(aes(x = ratio_cat, y = value, colour = model)) +
   geom_point(size = 2.5) +
   scale_y_continuous(limits = c(0, 100), breaks = 0:4*25) +
   labs(x = "", colour = "", shape = "", y = "% of viruses") +
-  facet_grid(cols = vars(category2), rows = vars(endpoint), 
+  facet_grid(cols = vars(category2), rows = vars(outcome), 
              scale = "free_x", space = "free_x", switch = "x") +
   theme(strip.placement = "outside", strip.background = element_blank(),
         legend.position = "none", axis.text.x = element_text(size = 8)) +
   labs(x = "") 
-triple_mab_pl
+})
 
-combo_pl = plot_grid(single_mab_pl + theme(legend.position = "none"), 
-          combo_mab_pl + yaxis_off, triple_mab_pl + yaxis_off,
+triple_mab_pl[[1]]
+
+combo_pl = plot_grid(single_mab_pl[[2]] + theme(legend.position = "none"), 
+          combo_mab_pl[[2]] + yaxis_off, triple_mab_pl[[2]] + yaxis_off,
           axis = "tb",
           align = "h", rel_widths = c(0.9, 1.1, 1), nrow = 1)
 
-plot_grid(pl_leg, combo_pl, nrow = 2, rel_heights = c(2,12))
+plot_grid(pl_leg, combo_pl, nrow = 2, rel_heights = c(1,12))
+
+```
+
+
+```{r coverage_trough, fig.width = 8}
+
+combo_pl_auc = plot_grid(single_mab_pl[[1]] + theme(legend.position = "none"), 
+          combo_mab_pl[[1]] + yaxis_off, triple_mab_pl[[1]] + yaxis_off,
+          axis = "tb",
+          align = "h", rel_widths = c(0.9, 1.1, 1), nrow = 1)
+
+plot_grid(pl_leg, combo_pl_auc, nrow = 2, rel_heights = c(1.5,12))
 
 ```
 
