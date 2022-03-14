@@ -1,5 +1,5 @@
 ---
-title: "Optimizing dose-ratios for combination bnAb HIV prevention trials."
+title: "Optimizing clinical dosing of combination broadly neutralizing antibodies for HIV prevention."
 site: workflowr::wflow_site
 output:
   workflowr::wflow_html:
@@ -8,21 +8,35 @@ editor_options:
   chunk_output_type: console
 ---
 
-This project consists of five pieces:
+This website is a research compendium for the following paper:
 
-- Development of PKPD framework - writing in the manuscript
-- [Exploration of combined titer measurements.]()
+Optimizing clinical dosing of combination broadly neutralizing antibodies for HIV prevention.
+Bryan T. Mayer, Allan C. deCamp, Yunda Huang, Joshua T. Schiffer, Raphael Gottardo, Peter B. Gilbert, Daniel B. Reeves.
+Plos Comp Bio. *Accepted.* 2022. 
+
+Visit the following link to use the accompanying shiny app:
+[http://bnabpkpd.fredhutch.org/](http://bnabpkpd.fredhutch.org/)
+
+### Primary Analyses
+
 - [Theoretical sensitivity analysis.]()
-- [Bi-specific bnAb scenario.]()
+- [Bi-specific bnAb scenario.](bispecific.html)
 - [Three bnAb combination optimization.](empirical-case-study.html)
+
+### Supplementary Analyses
+
+- [Exploration of combined titer measurements.](titer-analysis.html)
+- [Estimation of Hill slope from CATNAP data.](hill-slope-meta.html)
+
+### Data processing
 
 Data for analysis comes from:
 
-- [CATNAP database.](process_catnap.html)
+- [Pulling CATNAP data.](process_catnap.html)
 - Theoretical simulations: stored externally.
 - [PK data for combination optimization.]()
 
-Other code:
+### Other code:
 
 - [Functions.]()
 

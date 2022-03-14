@@ -1,15 +1,23 @@
 ---
 title: "Pull and Process CATNAP data"
 author: "Bryan Mayer"
-date: "`r Sys.Date()`"
+date: "2020-11-17"
 output: workflowr::wflow_html
 editor_options:
   chunk_output_type: console
 ---
 
-This script accesses CATNAP database at time of call and process by stripping text from censored IC50s.
+This script accesses CATNAP database at time of call and process by stripping text from censored IC50s. The data was pulled in November 2020 for the manuscript and is saved in the output folder.
 
-```{r}
+```{r setup}
+
+update_catnap = F
+if(!update_catnap)  print("Set update_catnap flag to TRUE to update data for analysis.")
+
+```
+
+```{r, eval = update_catnap}
+
 library(tidyverse)
 process_conc = function(conc){
   as.numeric(if_else(grepl("<", conc), gsub("<", "", conc),

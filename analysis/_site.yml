@@ -1,18 +1,20 @@
 name: "ratio-optimization"
 output_dir: ../docs
 navbar:
-  title: "ratio-optimization"
+  title: "bNAb-PKPD-Optimization"
   left:
-  - text: About
-    href: about.html
-  - text: License
-    href: license.html
   - text: Analysis Overview
-    href: index.html  
+    href: index.html
   - text: Data
     menu:
-    - text: Exposure Data Processing
-      href: setup-exposure-data.html
+    - text: Raw Data
+      href: process-sims.html
+    - text: Results Data
+      href: process-sims.html
+    - text: Simulation Data Processing
+      href: process-sims.html
+    - text: Simulation Data
+      href:
 output:
   workflowr::wflow_html:
     toc: yes

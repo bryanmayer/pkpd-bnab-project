@@ -1,3 +1,3 @@
-# Code
+R scripts and functions for bnab optimization analysis
+====================================
 
-Save command-line scripts and shared R code here.

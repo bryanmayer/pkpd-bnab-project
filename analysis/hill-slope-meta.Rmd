@@ -1,0 +1,173 @@
+---
+title: "Hill slope estimation using CATNAP"
+author: "Bryan Mayer"
+date: "2021-05-17"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## Background
+
+Here, we look at the estimates of the Hill slope based on IC50 and IC80 measurements from the CATNAP data.
+
+The Hill slope can be estimated from the IC50 and IC80 via:
+
+$$ 
+h = \frac{\log(4)}{\log(IC80/IC50)} 
+$$
+
+```{r, warning=F,message=F}
+library(tidyverse)
+library(kableExtra)
+library(cowplot)
+library(viridis)
+theme_set(theme_bw() + theme(legend.position = "top"))
+
+ic50_cutoff = 10
+ic50_breaks = c(10^c(-3:1), ic50_cutoff * 10)
+ic50_labels = c(0.001, 0.01, 0.1, 1, 10, "resistant")
+
+
+calc_hill_slope = function(IC50, IC80){
+  log(4)/log(IC80/IC50)
+}
+
+```
+
+
+```{r read-catnap}
+
+# removing missing endpoints rows
+# removing cases where IC50 isn't explicitly lower than IC50 (otherwise not S shape)
+
+catnap_dat_raw = read_rds("output/processed_catnap_assay.rds") %>%
+  dplyr::filter(!is.na(clean_IC80) & !is.na(clean_IC50)) %>%
+  dplyr::filter(clean_IC50 < clean_IC80) %>%
+  mutate(
+    any_censoring = right_cens_IC50 | right_cens_IC80 | left_cens_IC50 | left_cens_IC80,
+    hill_slope = calc_hill_slope(clean_IC50,clean_IC80)
+  )
+
+catnap_dat_uncens = dplyr::filter(catnap_dat_raw, !any_censoring)
+
+```
+
+## Input data
+
+```{r IC50-IC80-all-pl, fig.cap="Faceted by censoring, which imposes a trunaction in the measure. So probably best to exclude all censoring."}
+
+
+catnap_dat_raw %>%
+  dplyr::filter(!right_cens_IC50 & !left_cens_IC80) %>%
+  ggplot(aes(x = clean_IC50, y = clean_IC80)) +
+  geom_point(aes(color = factor(any_censoring))) +
+  geom_abline() +
+  scale_y_log10() +
+  scale_x_log10() +
+  facet_grid(left_cens_IC50 ~ right_cens_IC80) 
+
+```
+
+## Diagnostics Hill slope estimates vs. IC values
+
+```{r IC50-IC80-pl, fig.cap="The bands indicate some other truncation, probably a lower limit not clearly defined and upper regions are poorly specified (> 20)."}
+
+catnap_dat_uncens %>%
+  ggplot(aes(x = clean_IC50, y = clean_IC80)) +
+  geom_point(aes(color = factor(hill_slope < 1))) +
+  geom_abline(alpha = 0.5) +
+  geom_abline(intercept = log10(4), linetype = "dashed") +
+  scale_y_log10() +
+  scale_x_log10() 
+
+```
+
+
+```{r IC50-IC80-pl-final, fig.cap="Looking at IC50 > 1e-2 and IC80 < 20 only now."}
+
+catnap_dat_uncens %>%
+  dplyr::filter(clean_IC50 > 1e-2 & clean_IC80 < 20) %>%
+  ggplot(aes(x = clean_IC50, y = clean_IC80)) +
+  geom_point(aes(color = factor(hill_slope < 1))) +
+  geom_abline(alpha = 0.5) +
+  geom_abline(intercept = log10(4), linetype = "dashed") +
+  scale_y_log10() +
+  scale_x_log10() 
+
+```
+
+```{r hill-slope-raw}
+
+catnap_dat_uncens %>%
+  dplyr::filter(clean_IC50 > 1e-2  & clean_IC80 < 20) %>%
+  ggplot(aes(x = clean_IC50, y = hill_slope)) +
+  geom_point() +
+  geom_hline(yintercept = 1, colour = "red") +
+  scale_x_log10()
+
+
+catnap_dat_uncens %>%
+  dplyr::filter(clean_IC50 > 1e-2 & clean_IC80 < 20) %>%
+  ggplot(aes(x = clean_IC80, y = hill_slope)) +
+  geom_point() +
+  geom_smooth(method = 'gam', formula = 'y ~ s(x, bs = "cs")') +
+  geom_hline(yintercept = 1, colour = "red") +
+  scale_x_log10()
+
+```
+
+## Final Hill slope results
+
+```{r hill-slope-summary}
+
+catnap_dat_final = catnap_dat_uncens %>%
+  dplyr::filter(clean_IC50 > 1e-2 & clean_IC80 < 20) %>%
+  mutate(IC80_quartile = cut(clean_IC80, include.lowest = T,
+                            quantile(clean_IC80, prob = c(0, 0.25, 0.5, 0.75, 1), type = 5)),
+         IC50_quartile = cut(clean_IC50, include.lowest = T,
+                            quantile(clean_IC50, prob = c(0, 0.25, 0.5, 0.75, 1), type = 5))         
+  )
+
+hill_summary_IC80 = catnap_dat_final %>%
+  group_by(IC80_quartile) %>%
+  summarize(
+    total = n(),
+    mean = exp(mean(log(hill_slope))),
+    median = median(hill_slope),
+    iqr = paste(round(quantile(hill_slope, c(0.25, 0.75)), 2), collapse = "-"),
+    q95 = paste(round(quantile(hill_slope, c(0.025, 0.975)), 2), collapse = "-")
+  )
+
+hill_summary = catnap_dat_final %>%
+  group_by(IC50_quartile) %>%
+  summarize(
+    total = n(),
+    mean = exp(mean(log(hill_slope))),
+    median = median(hill_slope),
+    iqr = paste(round(quantile(hill_slope, c(0.25, 0.75)), 2), collapse = "-"),
+    q95 = paste(round(quantile(hill_slope, c(0.025, 0.975)), 2), collapse = "-")
+  )
+
+sum(hill_summary$total)
+
+hill_summary %>%
+  rename(IQR = iqr, `95th percentile range` = q95) %>%
+  kable(caption = "Hill slope estimates for different IC50 quantiles", digits = 2) %>%
+  kable_styling(full_width = F)
+
+```
+
+
+```{r hill-slope-pl}
+
+catnap_dat_final %>%
+  ggplot(aes(x = factor(IC50_quartile), y = hill_slope)) +
+  geom_boxplot() +
+  scale_y_log10() +
+  geom_text(data = mutate(hill_summary, lab = paste0(round(median, 2), " (", iqr,")")),
+            y = Inf, vjust = 1.2, aes(label = lab)) +
+  labs(x = "IC50 quartiles (ug/mL)", y = "Estimated Hill slope")
+
+```
+

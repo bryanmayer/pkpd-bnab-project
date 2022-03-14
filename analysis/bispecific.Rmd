@@ -1,7 +1,7 @@
 ---
 title: "Bispecific Analysis"
 author: "Bryan"
-date: "`r Sys.Date()`"
+date: "2022-02-10"
 output: workflowr::wflow_html
 editor_options:
   chunk_output_type: console
@@ -14,6 +14,7 @@ library(kableExtra)
 library(cowplot)
 library(viridis)
 library(VISCPK)
+
 theme_set(theme_bw() + theme(legend.position = "top", legend.key.width = unit(1, "cm"),
                              legend.box = "vertical"))
 source("code/neutralization-funs.R")
@@ -56,26 +57,6 @@ full_combinations = crossing(
 main_vars = c("ratio", "c0", "muIC50_1", "muIC50_2",
                "hl_1", "hl_2", "sigIC50_1", "sigIC50_2",
               "omega_1", "omega_2")
-
-```
-
-```{r, eval = F}
-mean_data = read_csv("~/Desktop/grid_full_mean2020-11-29.csv") # this is a huge file
-
-test = subset(mean_data, ratio == 0) %>%
-  filter(muIC50_1 == -3 & muIC50_2 == -2 &
-           sigIC50_1 == 0.25 & sigIC50_2 == 0.25 &
-           omega_1 == 1 & omega_2 == 0.33) %>%
-  select(main_vars,  maxNeut_iip_coverage2_mean_auc)
-
-bispecific_data = mean_data %>%
-  filter(muIC50_1 < -1 & muIC50_2 < -1 &
-           sigIC50_1 < 1 & sigIC50_2 < 1 &
-           omega_1 > 0.5 & omega_2 > 0.5) %>%
-  select(main_vars, contains("iip"))
-
-save(bispecific_data, file = "output/bispecific_data.rda")
-
 ```
 
 
@@ -103,14 +84,14 @@ case_study2_full = bispecific_data %>%
 
 CS2_iip = case_study2_full %>%
   select(-contains("coverage")) %>%
-  gather(key, value, -main_vars) %>%
+  gather(key, value, -all_of(main_vars)) %>%
   separate(key, into = c("interaction", "endpoint", "summary", "time"), sep = "_") %>%
   unite(summary, summary, endpoint, sep = "_")
 
 
 CS2_coverage = case_study2_full %>%
-  select(main_vars, contains("coverage")) %>%
-  gather(key, value, -main_vars) %>%
+  select(all_of(main_vars), contains("coverage")) %>%
+  gather(key, value, -all_of(main_vars)) %>%
   separate(key, 
            into = c("interaction", "endpoint", "coverage_endpoint", "summary", "time"), 
            sep = "_") %>%
@@ -133,12 +114,13 @@ CS2_data = bind_rows(CS2_iip, CS2_coverage) %>%
 #main_vars[-1] should exclude ratio
 CS2_combo = CS2_data %>%
   filter(c0 != 2400, hl_1 != hl_2) %>%
-  group_by_at(main_vars[-1]) %>%
-  group_by(interaction, summary_label, summary, time, coverage_level, add = T) %>%
+  group_by_at(all_of(main_vars[-1])) %>%
+  group_by(interaction, summary_label, summary, time, coverage_level, .add = T) %>%
   summarize(
     total_max = length(which(value==max(value))),
     best_ratio = ratio[which.max(value)],
-    best_value = max(value)
+    best_value = max(value),
+    `.groups` = "drop"
   ) %>%
   mutate(
     admin = "combination",
@@ -161,7 +143,7 @@ CS2_summary = bind_rows(CS2_combo, CS2_bispecific) %>%
 
 ## Parental ratio optimization and PK
 
-Look at all doses and summary endpoints to start. Switch to 300, 1200ug; mean ipi
+Look at all doses and summary endpoints to start. Switch to 300, 1200ug; mean iip
 
 ```{r dual-ratio, eval = F}
 
@@ -478,7 +460,8 @@ final_ratio_labels = c("All\nbNAb2", "1:1", "All\nbNAb1", "Bi-\nspecific")
 
 opt_plot_results = CS2_combo %>%
   ungroup() %>%
-  dplyr::filter(c0 %in% c(300, 1200) & (summary == "mean_iip" | coverage_level == 2)) %>%
+  dplyr::filter(c0 %in% c(300, 1200) & (summary == "mean_iip" | coverage_level == 2) & 
+                  interaction != "maxNeut") %>%
   mutate(
     ratio = best_ratio,
     value = best_value,
@@ -486,7 +469,7 @@ opt_plot_results = CS2_combo %>%
   )
 
 bispecific_plot_res = bispecific_pkpd_summary %>%
-  filter(synergy_factor < 1000) %>%
+  filter(synergy_factor < 1000 & interaction != "maxNeut") %>%
   mutate(
     ratio = bilab_location,
     value = best_value,
@@ -498,7 +481,7 @@ make_comparison_plot = function(time_var){
     filter(
       hl_1 != hl_2 & c0 %in% c(300, 1200) &
         (summary == "mean_iip" | coverage_level == 2) &
-        time == time_var
+        time == time_var & interaction != "maxNeut"
     ) %>%
     mutate(interaction = fct_rev(interaction_labeller(interaction))) %>%
     ggplot(aes(x = ratio, y = value, colour = factor(c0))) +
@@ -556,8 +539,11 @@ plot_grid(pl_legend,
           
 ```
 
-## Actual data
+```{r fig4-eps, fig.height=7, dev = "postscript", include = F}
 
-This analysis is difficult because there aren't that many studies with direct parental vs. bi-specific  comparisons. Even when they exist, PK data is rare. A general summary of 5 bi-specific papers (including Wagh et al papers) is that bi-specifics seem to give an IC50 boost (at a common concentration?) sometimes looking like synergy (>10-fold decrease in IC50) but there are certainly cases where the parent looks better. This could be noise when there isn't synergy, but not a clean story.
+plot_grid(pl_legend,
+          plot_grid(auc_pl, trough_pl + theme(legend.position = "none"), 
+                                    nrow = 2),
+          rel_heights = c(1.25, 12), nrow = 2)
 
-The data was sort of a mess, so would want a suggestion from co-authors if this is worth the effort.
+```

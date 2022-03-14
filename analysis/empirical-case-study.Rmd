@@ -365,6 +365,63 @@ amp_pl
 ```
 
 
+```{r amp-curve-id80, eval = F}
+
+
+amp_dat_id80 = read_excel("data/nejm_fig3a.xlsx", col_names = c("ic80", "pe")) %>%
+  mutate(
+    neut = pe/100,
+    id80 = 19.6/ic80,
+    titer = 4 * id80
+  ) 
+
+
+amp_id80_pd_fit = drc::drm(neut ~ id80, data = amp_dat_id80,
+                        fct = drc::LL.5(names = c("slope", "lower", "upper",
+                                                  "inflection", "asymmetry"),
+                             fixed = c(NA, 0, 1, NA, NA)))
+
+# 370
+amp_id50 = drc::ED(amp_id80_pd_fit, 50, display = F)[[1]]
+amp_id90 = drc::ED(amp_id80_pd_fit, 90, display = F)[[1]]
+amp_id95 = drc::ED(amp_id80_pd_fit, 95, display = F)[[1]]
+
+
+amp_id80_pl = tibble(
+  id80 = 10^seq(-0.1, 4.5, length = 100),
+  empirical = predict(amp_id80_pd_fit, data.frame(id80 = id80)),
+  potency =  1 - (1 + id80/amp_id50)^(-1)
+) %>%
+  gather(model, neut, empirical, potency) %>%
+  ggplot(aes(x = id80, y = neut * 100)) +
+  geom_line(aes(colour = model, linetype = model)) +
+  geom_point(data = amp_dat) +
+  scale_y_continuous(breaks = 0:10 * 10) +
+  labs(y = "empirical protection (%) (AMP)", 
+       colour = "", linetype = "") +
+  scale_color_manual(breaks = c( "empirical", "potency"), 
+                     labels = c( "5PL", 
+                                "Potency reduction"),
+                     values = c("black", "gray")) +
+  scale_linetype_manual(breaks = c("empirical", "potency"), 
+                     labels = c( "5PL", 
+                                "Potency reduction"),
+                     values = c(1, 1)) +
+  scale_x_log10(breaks = 10^(0:4), labels = as.character(10^(0:4))) +
+  theme(axis.text.x = element_text(size = 8), 
+        legend.key.width = unit(0.5, "cm"), 
+        legend.key.height =  unit(0.5, "cm"),
+        legend.margin = margin(t = -10,0,0,0),
+        legend.box.background = element_rect(colour = "black"),
+        legend.position = c(1, 0), legend.text = element_text(size = 7),
+        legend.direction = "vertical", 
+        legend.justification = c(1.01, -.10))
+
+amp_id80_pl
+
+```
+
+
 ```{r amp-pegu-dr}
 
 dr_labels = tibble(
@@ -1093,7 +1150,7 @@ all_combo %>%
 
 full_combo_res %>%
   dplyr::filter(str_detect(outcome, "coverage"))   %>%
-  ggplot(aes(x = ratio, y = value, colour = as.factor(parse_number(outcome)), linetype = endpoint)) +
+  ggplot(aes(x = ratio, y = value, colour = endpoint, linetype = as.factor(parse_number(outcome)))) +
   geom_line() + 
   geom_point(data = dplyr::filter(all_combo, str_detect(outcome, "coverage")), aes(x = ratio, shape = ratio_cat)) +
   facet_grid(model~analytes) +
@@ -1139,7 +1196,7 @@ triple_res_opt = all_triple_opt %>%
 triple_res_fixed %>%
   bind_rows(triple_res_opt) %>%
   dplyr::filter(str_detect(outcome, "coverage")) %>%
-  ggplot(aes(x = ratio_cat, y = value, colour = outcome2, shape = endpoint)) +
+  ggplot(aes(x = ratio_cat, y = value, colour = endpoint, shape = outcome2)) +
   geom_point() +
   facet_grid(model~category)
   
@@ -1190,7 +1247,7 @@ plot_grid(top_row, marg_cov_pl + theme(legend.position = "none"), labels = c("",
 ```
 
 
-```{r empirical-paper-pl, fig.width=7.5}
+```{r empirical-paper-assembly, fig.width=7.5}
 
 yaxis_off = theme(axis.title.y = element_blank(),
                   axis.text.y = element_blank(),
@@ -1199,68 +1256,69 @@ yaxis_off = theme(axis.title.y = element_blank(),
 
 combo_best_pl = dplyr::filter(combo_res_best, str_detect(outcome, "coverage")) %>%
    mutate(analytes2 = str_replace_all(analytes, ":", ":\n"))
- 
-single_mab_pl = map(unique(marg_res$endpoint), function(x){
-  marg_res %>%
-  dplyr::filter(str_detect(outcome, "coverage") & endpoint == x) %>%
-  mutate(outcome3 = paste(x, paste0("(",outcome2,")"))) %>%
+
+single_mab_pl = marg_res %>%
+  dplyr::filter(str_detect(outcome, "coverage")) %>%
+  mutate(endpoint2 = paste(endpoint,"(% viruses)")) %>%
   ggplot(aes(x = ratio_cat, y = value, colour = model)) +
-  geom_point(size = 2) +
+  geom_point(size = 2, aes(group = outcome2, shape = outcome2), position = position_dodge(width = 0.4)) +
   scale_y_continuous(limits = c(0, 100), breaks = 0:4*25) +
   labs(x = "", shape = "", y = "% of viruses") +
-  scale_color_discrete("Protection correlate", breaks = c("pegu", "amp"),
+  scale_color_discrete("protection correlate", breaks = c("pegu", "amp"),
                        labels = c("NHP (Pegu et al.)", "AMP (Corey et al.)")) +
-  facet_grid(cols = vars(category), rows = vars(outcome3), scale = "free_x", space = "free_x", 
+  scale_shape_manual("PKPD endpoint", values = c(16, 1)) +
+  facet_grid(cols = vars(category), rows = vars(endpoint2), scale = "free_x", space = "free_x", 
              switch = "both") +
     theme(strip.placement = "outside", strip.background = element_blank(),
-        legend.direction = "horizontal", axis.text.x = element_text(size = 6),
-        strip.text.y = element_text(size = 8)) +
+        legend.direction = "horizontal", legend.box = "vertical",
+        legend.spacing.y = unit(-0.75, "lines"), legend.box.margin = margin(b = 5, t = 2),
+        legend.background = element_blank(),
+        axis.text.x = element_text(size = 6), strip.text.y = element_text(size = 8)) +
   labs(x = "", y = "") 
-})
 
+pl_leg = get_legend(single_mab_pl)
+single_mab_pl 
 
-pl_leg = get_legend(single_mab_pl[[1]])
-single_mab_pl[[2]] + theme(legend.position = "none") 
-
-combo_mab_pl = map(unique(marg_res$endpoint), function(x){
-  full_combo_res %>%
-  dplyr::filter(str_detect(outcome, "coverage") & endpoint == x) %>%
+combo_mab_pl = full_combo_res %>%
+  dplyr::filter(str_detect(outcome, "coverage")) %>%
   mutate(analytes2 = str_replace_all(analytes, ":", ":\n")) %>%
   ggplot(aes(x = ratio, y = value, colour = model)) +
-  geom_line() + 
+  geom_line(aes(linetype = outcome)) + 
   scale_y_continuous(limits = c(0, 100), breaks = 0:4*25) +
-  geom_point(data = dplyr::filter(combo_best_pl, endpoint == x), aes(x = ratio),
-             shape = 21, size = 2) +
-  facet_grid(cols = vars(analytes2), rows = vars(outcome), 
+  geom_point(data = combo_best_pl, aes(x = ratio, shape = outcome), size = 2) +
+  scale_shape_manual(values = c(16, 1)) +
+  facet_grid(cols = vars(analytes2), rows = vars(endpoint), 
              scale = "free_x", space = "free_x", switch = "x") +
   scale_x_continuous(breaks = 0.5, labels = "1:1") +
   theme(strip.placement = "outside", strip.background = element_blank(),
         legend.position = "none", axis.text.x = element_text(size = 8)) +
   labs(x = "", y = "") 
-})
 
-combo_mab_pl[[1]]
+combo_mab_pl + theme(legend.position = "top", legend.box = "vertical")
 
-triple_mab_pl = map(unique(marg_res$endpoint), function(x){
-  triple_res_opt %>%
+triple_mab_pl = triple_res_opt %>%
   bind_rows(triple_res_fixed) %>%
   mutate(category2 = stringi::stri_replace(category, fixed = ":", ":\n", mode = "last")) %>%
-  dplyr::filter(str_detect(outcome, "coverage") & endpoint == x) %>%
+  dplyr::filter(str_detect(outcome, "coverage")) %>%
   ggplot(aes(x = ratio_cat, y = value, colour = model)) +
-  geom_point(size = 2.5) +
+  geom_point(size = 2.5, aes(shape = outcome, group = outcome), position= position_dodge(width = 0.4)) +
+  scale_shape_manual("PKPD endpoint", values = c(16, 1)) +
   scale_y_continuous(limits = c(0, 100), breaks = 0:4*25) +
   labs(x = "", colour = "", shape = "", y = "% of viruses") +
-  facet_grid(cols = vars(category2), rows = vars(outcome), 
+  facet_grid(cols = vars(category2), rows = vars(endpoint), 
              scale = "free_x", space = "free_x", switch = "x") +
   theme(strip.placement = "outside", strip.background = element_blank(),
         legend.position = "none", axis.text.x = element_text(size = 8)) +
   labs(x = "") 
-})
 
-triple_mab_pl[[1]]
+triple_mab_pl + theme(legend.position = "top", legend.box = "vertical")
 
-combo_pl = plot_grid(single_mab_pl[[2]] + theme(legend.position = "none"), 
-          combo_mab_pl[[2]] + yaxis_off, triple_mab_pl[[2]] + yaxis_off,
+```
+
+```{r empirical-paper-pl, fig.width=7.5}
+
+combo_pl = plot_grid(single_mab_pl + theme(legend.position = "none"), 
+          combo_mab_pl + yaxis_off, triple_mab_pl + yaxis_off,
           axis = "tb",
           align = "h", rel_widths = c(0.9, 1.1, 1), nrow = 1)
 
@@ -1268,17 +1326,8 @@ plot_grid(pl_leg, combo_pl, nrow = 2, rel_heights = c(1,12))
 
 ```
 
+```{r fig5-eps, fig.width=7.5, dev = "postscript", include = F}
 
-```{r coverage_trough, fig.width = 8}
-
-combo_pl_auc = plot_grid(single_mab_pl[[1]] + theme(legend.position = "none"), 
-          combo_mab_pl[[1]] + yaxis_off, triple_mab_pl[[1]] + yaxis_off,
-          axis = "tb",
-          align = "h", rel_widths = c(0.9, 1.1, 1), nrow = 1)
-
-plot_grid(pl_leg, combo_pl_auc, nrow = 2, rel_heights = c(1.5,12))
+plot_grid(pl_leg, combo_pl, nrow = 2, rel_heights = c(1,12))
 
 ```
-
-
-
