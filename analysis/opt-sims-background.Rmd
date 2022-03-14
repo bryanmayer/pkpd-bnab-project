@@ -1,0 +1,37 @@
+---
+title: "Theoretical optimization functions"
+author: "Bryan Mayer"
+date: "`r Sys.Date()`"
+output:
+  workflowr::wflow_html:
+    code_folding: none
+editor_options:
+  chunk_output_type: console
+---
+
+
+## Pharmacodynamic functions (`neutralization-funs.R`)
+
+This suite of functions performs calculations to convert between titer, neutralization, and IIP; and to perform Bliss-Hill independence calculations.
+
+```{r, code=readLines("../code/neutralization-funs.R"), eval = F}
+```
+
+
+## 1-cmpt ratio optimization functions (`onecmptPKPD-sims.R`)
+
+This suite of functions performs PKPD simulations for varying PK/PD inputs sampling viruses accordingly assuming a 1-cmpt PK model. These functions were written to have generalized utility. Functions from here were also used for bi-specific synergy.
+
+```{r, code=readLines("../code/onecmptPKPD-sims.R"), eval = F}
+```
+
+### Processing 1-cmpt theoretical results - [See here](process-sims.html)
+
+## 3-bnab case study ratio optimization functions (`empirical-opt-funs.R`)
+
+These functions follow similar structure to 1-cmpt but were specifically curated for this 3-bnab case study. They expect labels for 3BNC117, 10-1074, and VRC07-523LS; perform 2-cmpt PK simulations; and utilize titer-protection dose-response 5PL model relationships fit as drc objects.
+
+```{r, code=readLines("../code/empirical-opt-funs.R"), eval = F}
+```
+
+
