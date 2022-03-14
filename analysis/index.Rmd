@@ -19,7 +19,7 @@ Visit the following link to use the accompanying shiny app:
 
 ### Primary Analyses
 
-- [Theoretical sensitivity analysis.]()
+- [Theoretical sensitivity optimization analysis.](opt-sims-background.html) - simulation results generated in R, analysis was done with python (code TBD)
 - [Bi-specific bnAb scenario.](bispecific.html)
 - [Three bnAb combination optimization.](empirical-case-study.html)
 
@@ -28,17 +28,15 @@ Visit the following link to use the accompanying shiny app:
 - [Exploration of combined titer measurements.](titer-analysis.html)
 - [Estimation of Hill slope from CATNAP data.](hill-slope-meta.html)
 
-### Data processing
-
-Data for analysis comes from:
+### External data sources
 
 - [Pulling CATNAP data.](process_catnap.html)
-- Theoretical simulations: stored externally.
-- [PK data for combination optimization.]()
+- [PK data for combination optimization.](https://github.com/bryanmayer/pkpd-bnab-project/tree/main/data/empirical-pk-data/)
+- [AMP IC80 vs. PE data.](https://www.nejm.org/na101/home/literatum/publisher/mms/journals/content/nejm/2021/nejm_2021.384.issue-11/nejmoa2031738/20210611/images/img_small/nejmoa2031738_f3.jpeg) - [data here](https://github.com/bryanmayer/pkpd-bnab-project/tree/main/data/empirical-pk-data/)
 
-### Other code:
+### Optimization functions
 
-- [Functions.]()
+- [Main functions described together here.](opt-sims-background.html)
 
 
 

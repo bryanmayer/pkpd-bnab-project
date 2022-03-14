@@ -8,12 +8,32 @@ navbar:
   - text: Data
     menu:
     - text: Raw Data
-      href: process-sims.html
-    - text: Results Data
-      href: process-sims.html
+      href: https://github.com/bryanmayer/pkpd-bnab-project/tree/main/data
+    - text: Results Output
+      href: https://github.com/bryanmayer/pkpd-bnab-project/tree/main/output
     - text: Simulation Data Processing
       href: process-sims.html
     - text: Simulation Data
+      href: https://github.com/bryanmayer/pkpd-bnab-project/tree/main/output/sim_results
+  - text: Tables
+    menu:
+    - text: Supp. Table 1
+      href:
+    - text: Supp. Table 2
+      href:
+  - text: Figures
+    menu:
+    - text: Figure 4
+      href:
+    - text: Figure 5
+      href:
+    - text: Supp. Figure 1
+      href:
+    - text: Supp. Figure 3
+      href:
+    - text: Supp. Figure 4
+      href:
+    - text: Supp. Figure 5
       href:
 output:
   workflowr::wflow_html:

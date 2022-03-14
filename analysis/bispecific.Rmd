@@ -7,6 +7,8 @@ editor_options:
   chunk_output_type: console
 ---
 
+## Setup
+
 ```{r, message = F, warning = F}
 
 library(tidyverse)
@@ -33,30 +35,6 @@ interaction_labeller = function(interaction_var){
          levels = c("minNeut", "maxNeut", "additivity", "BH")
   )
 }
-
-# parameter grid
-
-hl = c(7, 28, 42, 84)
-omega = c(0.33, 0.67, 1)
-muIC50 = c(-3, -2, -1)
-sigIC50 = c(0.25, 0.5, 1)
-
-full_combinations = crossing(
-  hl_1 = hl,
-  hl_2 = hl,
-  omega_1 = omega,
-  omega_2 = omega,
-  muIC50_1 = muIC50,
-  muIC50_2 = muIC50,
-  sigIC50_1 = sigIC50,
-  sigIC50_2 = sigIC50
-) %>%
-  filter(hl_1 <= hl_2)
-
-
-main_vars = c("ratio", "c0", "muIC50_1", "muIC50_2",
-               "hl_1", "hl_2", "sigIC50_1", "sigIC50_2",
-              "omega_1", "omega_2")
 ```
 
 
@@ -64,7 +42,7 @@ main_vars = c("ratio", "c0", "muIC50_1", "muIC50_2",
 load("output/bispecific_data.rda")
 ```
 
-## Setup
+## Background
 
 Combine a superb bnab with bad half-live with decent mab with great half-life.
 
@@ -74,6 +52,11 @@ Combine a superb bnab with bad half-live with decent mab with great half-life.
 Here we will want to look at both mean IIP and coverage IIP > 2
 
 ```{r CS2-setup}
+
+main_vars = c("ratio", "c0", "muIC50_1", "muIC50_2",
+               "hl_1", "hl_2", "sigIC50_1", "sigIC50_2",
+              "omega_1", "omega_2")
+
 #the case study2 notation is an artifact of old two case study analysis
 
 case_study2_full = bispecific_data %>%
@@ -143,82 +126,9 @@ CS2_summary = bind_rows(CS2_combo, CS2_bispecific) %>%
 
 ## Parental ratio optimization and PK
 
-Look at all doses and summary endpoints to start. Switch to 300, 1200ug; mean iip
+### PK 
 
-```{r dual-ratio, eval = F}
-
-CS2_data %>%
-  filter(c0 == 1200 & hl_1 != hl_2 & (is.na(coverage_level) | coverage_level == 2) &
-           interaction == "BH") %>%
-  dplyr::select(-coverage_level, -summary_label) %>%
-  spread(key = summary, value = value) %>%
-  ggplot(aes(x = ratio, y = mean_iip)) +
-  geom_line() +
-  geom_line(aes(y = mean_coverage * 6), colour = "blue") +
-  scale_y_continuous(sec.axis = sec_axis(~./6, name="mean_breadth")) +
-  facet_wrap( ~ time) +
-  theme(axis.title.y.right = element_text(color = "blue", size=13),
-        axis.text.y.right = element_text(color = "blue"))
-
-
-
-```
-
-```{r CS2-bestratio, fig.cap="supplement. Optimal ratios for all summaries and interactions with combination administration."}
-
-CS2_summary %>%
-  filter(admin == "combination") %>%
-  ggplot(aes(x = interaction, y = best_ratio, shape = time)) +
-  geom_point() +
-  geom_hline(yintercept = 0.5, linetype = "dashed") +
-  scale_y_continuous(breaks = ratio_breaks, labels = ratio_labels, limits = c(0, 1)) +
-  labs(y = "optimal ratio") +
-  facet_grid(rows = vars(summary_label), 
-             cols = vars(c0), space = "free", scales="free_x") +
-  theme(legend.box = "vertical", axis.text.x = element_text(angle = 30, hjust = 1))
-
-```
-
-```{r CS2-bestratio-subset, fig.cap="subset for analysis. not for paper."}
-
-CS2_summary %>%
-  filter(admin == "combination" & c0 %in% c(300, 1200) &
-           (summary == "mean_iip" | coverage_level == 2)) %>%
-  ggplot(aes(x = interaction, y = best_ratio, shape = time)) +
-  geom_point() +
-  geom_hline(yintercept = 0.5, linetype = "dashed") +
-  scale_y_continuous(breaks = ratio_breaks, labels = ratio_labels, limits = c(0, 1)) +
-  labs(y = "optimal ratio") +
-  facet_grid(rows = vars(summary_label), 
-             cols = vars(c0), space = "free", scales="free_x") +
-  theme(legend.box = "vertical", axis.text.x = element_text(angle = 30, hjust = 1))
-
-
-```
-
-```{r ratio-sensitivity}
-
-CS2_data %>%
-  filter(hl_1 != hl_2 & c0 %in% c(300, 1200) &
-           (summary == "mean_iip" | coverage_level == 2)) %>%
-  ggplot(aes(x = ratio, y = value, colour = factor(c0), linetype = time)) +
-  geom_line() +
-  scale_x_continuous(breaks = ratio_breaks, labels = ratio_labels_x, limits = c(0, 1)) +
-  geom_point(data = subset(CS2_combo, c0 %in% c(300, 1200) &
-           (summary == "mean_iip" | coverage_level == 2)),
-           aes(x = best_ratio, y = best_value)) +
-  facet_grid(rows = vars(summary_label), 
-             cols = vars(interaction),  scales="free_y", switch = "y") +
-  labs(colour = "dose (mg)", linetype = "", x = "ratio mAb 1 to total dose", y= "") +
-  theme(strip.placement = "outside", strip.background = element_blank(),
-        panel.spacing.x = unit(1, "lines"),
-        strip.switch.pad.grid = unit(0, "lines"),
-        legend.box = "horizontal")
-
-```
-
-
-```{r CS-HL, fig.cap = "what does the varying combination 1-cmpt PK look like. You basically get a fixzed mAb 2"}
+```{r parental-pk, fig.cap = "Differences in PK over varying doses."}
 
 CS2_summary %>%
   filter(c0 %in% c(300, 600) & summary_label %in% c("IIP > 2", "Mean IIP") &
@@ -240,6 +150,7 @@ CS2_summary %>%
 
 
 ```{r bispecific-pk-pl, fig.cap="bi-specific 1-cmpt PK"}
+
 bispecific_pk = map_df(c(300, 1200), ~ tibble(
   time = seq(0, 84, by = 1),
   c0 = .,
@@ -254,11 +165,70 @@ bispecific_pk %>%
 
 ```
 
-## No synergy bi-specific vs combination comparision
+### Optimization & pkpd
+
+Want to compare bi-specific to optimal parent. Look at all doses and summary endpoints to start. Switch between 300 and 1200ug; mean iip
+
+```{r bestratio, fig.cap="Optimal ratios for all summaries and interactions with combination administration."}
+
+CS2_summary %>%
+  filter(admin == "combination") %>%
+  ggplot(aes(x = interaction, y = best_ratio, shape = time)) +
+  geom_point() +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  scale_y_continuous(breaks = ratio_breaks, labels = ratio_labels, limits = c(0, 1)) +
+  labs(y = "optimal ratio") +
+  facet_grid(rows = vars(summary_label), 
+             cols = vars(c0), space = "free", scales="free_x") +
+  theme(legend.box = "vertical", axis.text.x = element_text(angle = 30, hjust = 1))
+
+```
+
+```{r bestratio-subset, fig.cap="Alt. visualization of optimal subset."}
+
+CS2_summary %>%
+  filter(admin == "combination" & c0 %in% c(300, 1200) &
+           (summary == "mean_iip" | coverage_level == 2)) %>%
+  ggplot(aes(x = interaction, y = best_ratio, shape = time)) +
+  geom_point() +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  scale_y_continuous(breaks = ratio_breaks, labels = ratio_labels, limits = c(0, 1)) +
+  labs(y = "optimal ratio") +
+  facet_grid(rows = vars(summary_label), 
+             cols = vars(c0), space = "free", scales="free_x") +
+  theme(legend.box = "vertical", axis.text.x = element_text(angle = 30, hjust = 1))
+
+
+```
+
+```{r ratio-sensitivity, fig.cap="Ratio sensitivity, all outcomes."}
+
+CS2_data %>%
+  filter(hl_1 != hl_2 & c0 %in% c(300, 1200) &
+           (summary == "mean_iip" | coverage_level == 2)) %>%
+  ggplot(aes(x = ratio, y = value, colour = factor(c0), linetype = time)) +
+  geom_line() +
+  scale_x_continuous(breaks = ratio_breaks, labels = ratio_labels_x, limits = c(0, 1)) +
+  geom_point(data = subset(CS2_combo, c0 %in% c(300, 1200) &
+           (summary == "mean_iip" | coverage_level == 2)),
+           aes(x = best_ratio, y = best_value)) +
+  facet_grid(rows = vars(summary_label), 
+             cols = vars(interaction),  scales="free_y", switch = "y") +
+  labs(colour = "dose (mg)", linetype = "", x = "ratio mAb 1 to total dose", y= "") +
+  theme(strip.placement = "outside", strip.background = element_blank(),
+        panel.spacing.x = unit(1, "lines"),
+        strip.switch.pad.grid = unit(0, "lines"),
+        legend.box = "horizontal")
+
+```
+
+
+## Comparision between bi-specific and optimal (no synergy)
 
 The PK penalty is evident in the 1:1 comparison, where the bi-specific would dominate by assumption for common PK.
 
 ```{r}
+
 balance_comb = CS2_data %>%
   filter(c0 %in% c(300, 1200) &
            hl_1 != hl_2 & (is.na(coverage_level) | coverage_level == 2) &
@@ -305,11 +275,9 @@ CS2_summary %>%
 
 ## Synergy Analysis
 
-### Background
+### Methods
 
-#### Neutralization
-
-Synergy is described as an "IC50" boost-factor ($\alpha > 1$), like an inverse-potency reduction. The neutralization calculations are done as follows using the titer definition, where i = parental arm:
+Synergy is defined as an "IC50" boost-factor ($\alpha > 1$), like an inverse-potency reduction. The neutralization calculations are done as follows using the titer definition, where i = parental arm:
 $$\tau_i = \frac{C(t)}{IC50_i}$$
 
 - Minimum: $$1 - [1+\alpha*min_i\{\tau_i\}]^{-1}$$
@@ -405,8 +373,7 @@ bispecific_pkpd_summary = bispecific_pkpd %>%
 
 ```
 
-```{r bispecific-pkpd}
-
+```{r bispecific-synergy-pkpd}
 
 bispecific_pkpd %>%
   gather(outcome, value, mean_iip, mean_coverage) %>%
@@ -448,7 +415,7 @@ CS2_combo %>%
 
 ```
 
-## Master figure
+## Paper figure
 
 Combines the parental and synergy analysis.
 
@@ -541,6 +508,7 @@ plot_grid(pl_legend,
 
 ```{r fig4-eps, fig.height=7, dev = "postscript", include = F}
 
+# required for submission
 plot_grid(pl_legend,
           plot_grid(auc_pl, trough_pl + theme(legend.position = "none"), 
                                     nrow = 2),

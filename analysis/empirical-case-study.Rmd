@@ -308,7 +308,7 @@ amp_conc_avg =  amp_conc_data %>%
   mutate(weight = n / sum(n)) %>%
   summarize(across(c(peak, midpoint, trough), ~sum(. * weight)), .groups = "drop")
 
-amp_dat_all = read_excel("data/nejm_fig3a.xlsx", col_names = c("ic80", "pe")) %>%
+amp_dat_all = read_excel("data/nejm_fig3a.xlsx") %>%
   crossing(time = c("peak", "midpoint", "trough")) %>%
   left_join(gather(amp_conc_avg, time, mean_conc, midpoint, peak, trough), by = "time") %>%
   mutate(
