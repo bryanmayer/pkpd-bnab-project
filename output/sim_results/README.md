@@ -5,6 +5,7 @@ This directory exists to store the simulation data as needed. These are relative
 
 - [process-sims.Rmd](https://github.com/bryanmayer/pkpd-bnab-project/blob/main/analysis/process-sims.Rmd) pulls the raw simulation data from Dataverse (500 mb file)
 - If process-sims.Rmd is executed, three additional datasets are stored in here. A long dataset containing pkpd output optimum and the corresponding optimal ratios. That dataset is processed into two wide datasets for correlation analysis: one for the optimum and one for the ratios.
+ - `figures/` folder contains figures generated from sensitivity analysis done with [python](https://github.com/bryanmayer/pkpd-bnab-project/tree/main/code/python).
 
 Raw simulation data citation:
 
