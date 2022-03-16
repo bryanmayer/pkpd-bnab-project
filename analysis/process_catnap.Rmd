@@ -9,6 +9,10 @@ editor_options:
 
 This script accesses CATNAP database at time of call and process by stripping text from censored IC50s. The data was pulled in November 2020 for the manuscript and is saved in the output folder.
 
+```{r, warning=F, message=F}
+library(tidyverse)
+```
+
 ```{r setup}
 
 update_catnap = F
@@ -18,7 +22,6 @@ if(!update_catnap)  print("Set update_catnap flag to TRUE to update data for ana
 
 ```{r, eval = update_catnap}
 
-library(tidyverse)
 process_conc = function(conc){
   as.numeric(if_else(grepl("<", conc), gsub("<", "", conc),
           if_else(grepl(">", conc), gsub(">", "", conc), conc)))
@@ -33,7 +36,7 @@ virus_dat = read_tsv(url(virus_url)) %>% janitor::clean_names()
 catnap_raw = read.table(url(assay_url), stringsAsFactors = F,
                          header = T, sep = "\t", na.strings = "")
 
-subset(catnap_raw, str_detect(Reference, "Wagh") & Antibody %in% "3BNC117/PGT135")
+# subset(catnap_raw, str_detect(Reference, "Wagh") & Antibody %in% "3BNC117/PGT135")
 
 tmp = subset(catnap_raw, !is.na(ID50))
 unique(tmp$Antibody) # these are polyclonal and can be subsetted out and ID50 can be removed
@@ -68,3 +71,39 @@ write_rds(catnap_dat, "output/processed_catnap_assay.rds")
 
 ```
 
+## Pharmacodynamic distributions
+
+These ranges helped inform the theoretical sensitivity analysis. The box plots represent the distribution of antibodies for different viral summaries. Resistance was defined as IC50 > 10 mcg/mL.
+
+```{r, warning=F, fig.cap = "Distribution of antibody potency measurements."}
+catnap_dat = read_rds("output/processed_catnap_assay.rds") 
+
+ic50_cutoff = 10
+
+catnap_dat %>%
+  mutate(
+    sensitive = clean_IC50 < ic50_cutoff,
+    clean_IC50 = if_else(clean_IC50 >= ic50_cutoff, Inf, clean_IC50)
+  ) %>%
+  group_by(Antibody) %>%
+  summarize(
+    total_virus = n(),
+    pct_resistant = 100*mean(!sensitive),
+    mean_sensitive = mean(log10(clean_IC50[sensitive])),
+    sd_sensitive = sd(log10(clean_IC50[sensitive]))
+  ) %>%
+  filter(total_virus > 100) %>%
+  gather(key, value, pct_resistant:sd_sensitive) %>%
+  mutate(key = factor(key, levels = c("pct_resistant", "mean_sensitive", "sd_sensitive"),
+                      labels = c("Pct. viruses resistant", "Mean log10 IC50 (sensitive viruses)",
+                                 "Std. dev. log10 IC50 (sensitive viruses)"))
+  ) %>%
+  ggplot(aes(x = key, y = value)) +
+  geom_boxplot() +
+  labs(y = "", x = "") +
+  facet_wrap(~key, scales = "free", strip.position = "left") +
+  theme(strip.placement = "outside", strip.background = element_blank(),
+        axis.text.x = element_blank())
+  
+
+```

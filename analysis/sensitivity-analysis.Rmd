@@ -1,0 +1,39 @@
+---
+title: "Sensitivity correlation analysis code (python)"
+author: "Bryan Mayer, Daniel Reeves (python)"
+date: "3/14/2022"
+output:
+  workflowr::wflow_html:
+    code_folding: none
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Background
+
+The sensitivity analysis of the theoretical simulations was performed using python jupyter notebooks. To display the code here, the notebooks were converted into Rmd. 
+
+```{r, eval = F}
+rmarkdown:::convert_ipynb("code/python/correlations.ipynb")
+rmarkdown:::convert_ipynb("code/python/correlations-optimal.ipynb")
+```
+
+The code echoed here is still clunky and the notebooks are best viewed using `jupyter notebook` within the `code/python/` directory.
+
+https://github.com/bryanmayer/pkpd-bnab-project/tree/main/code/python
+
+
+## PKPD outcome sensitivity (Figure 2) (`correlations.ipynb`)
+
+```{python code=readLines("../code/python/correlations.Rmd"), eval = F}
+```
+
+## Optimal ratio sensitivity (Figure 3) (`correlations-optimal.ipynb`)
+
+```{python, code=readLines("../code/python/correlations-optimal.Rmd"), eval = F}
+```
+

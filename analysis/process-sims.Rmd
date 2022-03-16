@@ -1,0 +1,147 @@
+---
+title: "Process Simulation Output"
+author: "Bryan Mayer"
+date: "2020-11-30"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+## README
+
+This script does not actively pull and process the raw simulation data as a default, the user would need to set `process_sim_data = T`. These data are used for the correlation heatmaps and the bi-specific case study.
+
+```{r, message = F, warning = F}
+
+library(tidyverse)
+library(kableExtra)
+
+process_sim_data = F
+
+if(!process_sim_data) print("flip the process_sim_data flag to run processing, will take some time.")
+
+```
+
+## Setup and pull raw simulation data
+
+```{r, echo = T, eval = process_sim_data}
+# parameter grid
+
+hl = c(7, 28, 42, 84)
+omega = c(0.33, 0.67, 1)
+muIC50 = c(-3, -2, -1)
+sigIC50 = c(0.25, 0.5, 1)
+
+full_combinations = crossing(
+  c0 = c(150, 300, 600, 1200, 2400),
+  hl_1 = hl,
+  hl_2 = hl,
+  omega_1 = omega,
+  omega_2 = omega,
+  muIC50_1 = muIC50,
+  muIC50_2 = muIC50,
+  sigIC50_1 = sigIC50,
+  sigIC50_2 = sigIC50
+) %>%
+  filter(hl_1 <= hl_2)
+
+
+key_vars = c("ratio", "c0", "muIC50_1", "muIC50_2",
+               "hl_1", "hl_2", "sigIC50_1", "sigIC50_2",
+              "omega_1", "omega_2", "sim")
+
+group_vars = c("c0", "muIC50_1", "muIC50_2",
+               "hl_1", "hl_2", "sigIC50_1", "sigIC50_2",
+              "omega_1", "omega_2", "sim", "endpoint")
+
+```
+
+
+```{r read_sims, eval = process_sim_data, echo = T}
+
+if(!file.exists("output/sim_results/grid_full_mean2020-11-29.csv")){
+  mean_data = read_csv(url('https://dataverse.harvard.edu/api/access/datafile/6092468'))
+  write_csv(mean_data, "output/sim_results/grid_full_mean2020-11-29.csv")
+} else{
+  mean_data = read_csv("output/sim_results/grid_full_mean2020-11-29.csv") # this is a huge file
+}
+
+glimpse(mean_data)
+```
+
+## Process simulation data
+
+### Find optimal ratio setting
+
+Here, the simulation data is transposed long by pkpd outcome and settings, then the optimal ratio setting and outcome optimum are determined. This takes some time (several minutes). This processed data frame is saved in long form.
+
+This processing is done in steps to check for errors. Due to numerical errors, nans were originally produced but rarely. They are flagged explicitly in this processing but there were none produced by the final simulation.
+
+```{r, eval = process_sim_data, echo = T}
+
+mean_data_long = mean_data %>%
+  dplyr::select(-conc_1_auc, -conc_2_auc, -conc_1_trough, -conc_2_trough, -virus_seed,
+                -total_virus_sims) %>%
+  gather(endpoint, value, -all_of(key_vars))
+
+opt_ratio_summary_tmp = mean_data_long %>%
+  group_by_at(all_of(group_vars)) %>%
+  mutate(contains_nan = any(is.nan(value))) 
+
+any(opt_ratio_summary_tmp$contains_nan)
+rm(opt_ratio_summary_tmp)
+
+opt_ratio_summary =  mean_data_long %>%
+  group_by_at(all_of(group_vars)) %>%
+  summarize(
+    optimum = max(value),
+    opt_ratio = ratio[which.max(value)]
+  ) %>%
+  ungroup()
+
+write_csv(opt_ratio_summary, "output/sim_results/opt_ratio_summary.csv")
+
+```
+
+
+### Store optimum and optimal ratio
+
+For the sensitivity analysis, the optimum and optimal ratio are evaluated for correlation across all settings and endpoints. The following code separates optimum and optimal ratio, and makes the corresponding wide data for downstream correlation analysis.
+
+```{r make-wide, eval = process_sim_data, echo = T}
+
+optimum_wide = opt_ratio_summary %>%
+  group_by_at(all_of(key_vars[-1])) %>%
+  dplyr::select(-opt_ratio) %>%
+  spread(endpoint, optimum)
+write_csv(optimum_wide, "output/sim_results/optimum_wide.csv")
+
+opt_ratio_wide = opt_ratio_summary %>%
+  group_by_at(all_of(key_vars[-1])) %>%
+  dplyr::select(-optimum) %>%
+  spread(endpoint, opt_ratio)
+write_csv(opt_ratio_wide, "output/sim_results/opt_ratio_wide.csv")
+
+```
+
+### Make bi-specific case study data
+
+The bi-specific data is available in `output/bispecific_data.rda` without running this file. To re-generate the bi-specific data, the user must explicitly set this chunk eval option below to TRUE.
+
+```{r, eval = F, echo = T}
+
+test = subset(mean_data, ratio == 0) %>%
+  filter(muIC50_1 == -3 & muIC50_2 == -2 &
+           sigIC50_1 == 0.25 & sigIC50_2 == 0.25 &
+           omega_1 == 1 & omega_2 == 0.33) %>%
+  select(main_vars,  maxNeut_iip_coverage2_mean_auc)
+
+bispecific_data = mean_data %>%
+  filter(muIC50_1 < -1 & muIC50_2 < -1 &
+           sigIC50_1 < 1 & sigIC50_2 < 1 &
+           omega_1 > 0.5 & omega_2 > 0.5) %>%
+  select(all_of(main_vars), contains("iip"))
+
+save(bispecific_data, file = "output/bispecific_data.rda")
+
+```

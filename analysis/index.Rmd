@@ -14,14 +14,22 @@ Optimizing clinical dosing of combination broadly neutralizing antibodies for HI
 Bryan T. Mayer, Allan C. deCamp, Yunda Huang, Joshua T. Schiffer, Raphael Gottardo, Peter B. Gilbert, Daniel B. Reeves.
 Plos Comp Bio. *Accepted.* 2022. 
 
-Visit the following link to use the accompanying shiny app:
-[http://bnabpkpd.fredhutch.org/](http://bnabpkpd.fredhutch.org/)
+
+### Shiny Application
+
+- [http://bnabpkpd.fredhutch.org/](http://bnabpkpd.fredhutch.org/)
+- Code for the shiny app is hosted here: https://github.com/FredHutch/bnAb_PKPD_Simulation_Shiny
 
 ### Primary Analyses
 
-- [Theoretical sensitivity optimization analysis.](opt-sims-background.html) - simulation results generated in R, analysis was done with python (code TBD)
+- [Code and functions used throughout analysis](opt-sims-background.html)
+- Theoretical sensitivity optimization analysis.
+  - [Script used to conduct simulations.](https://github.com/bryanmayer/pkpd-bnab-project/blob/main/code/simulation-batch.R)
+  - [Accessing raw simulation results.](process-sims.html)
+  - [Python code to perform sensitivity analysis.](sensitivity-analysis.html)
 - [Bi-specific bnAb scenario.](bispecific.html)
 - [Three bnAb combination optimization.](empirical-case-study.html)
+
 
 ### Supplementary Analyses
 
@@ -32,11 +40,5 @@ Visit the following link to use the accompanying shiny app:
 
 - [Pulling CATNAP data.](process_catnap.html)
 - [PK data for combination optimization.](https://github.com/bryanmayer/pkpd-bnab-project/tree/main/data/empirical-pk-data/)
-- [AMP IC80 vs. PE data.](https://www.nejm.org/na101/home/literatum/publisher/mms/journals/content/nejm/2021/nejm_2021.384.issue-11/nejmoa2031738/20210611/images/img_small/nejmoa2031738_f3.jpeg) - [data here](https://github.com/bryanmayer/pkpd-bnab-project/tree/main/data/empirical-pk-data/)
-
-### Optimization functions
-
-- [Main functions described together here.](opt-sims-background.html)
-
-
+- [AMP IC80 vs. PE data.](https://www.nejm.org/na101/home/literatum/publisher/mms/journals/content/nejm/2021/nejm_2021.384.issue-11/nejmoa2031738/20210611/images/img_small/nejmoa2031738_f3.jpeg) - [data here](https://github.com/bryanmayer/pkpd-bnab-project/blob/main/data/nejm_fig3a.xlsx)
 

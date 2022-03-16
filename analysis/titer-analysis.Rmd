@@ -22,14 +22,6 @@ theme_set(theme_bw() + theme(legend.position = "top"))
 
 ```{r setup}
 
-pk_data = read_csv(here("data/empirical-pk-data/example-pk-dat.csv"),
-                   col_types = cols()) %>%
-  dplyr::filter(mab != "bNAb2") %>%
-  dplyr::select(-analyte) %>%
-  mutate(mab = if_else(mab == "bNAb3", "bNAb2", mab),
-         conc = conc/3) %>%
-  rename(Days = time)
-
 paste_ic50s = function(x) paste0("{",paste(x, collapse = ", "), "}")
 conc_range = 10^(seq(-2, 2.5,  length = 50))
 conc_grid = crossing(a = conc_range, b = conc_range)
@@ -37,31 +29,6 @@ conc_grid = crossing(a = conc_range, b = conc_range)
 ```
 
 ```{r funs}
-
-odds2fraction = function(odds_1, odds_2, return_all_frac = F){
-  frac_1 = odds_1/(odds_1+odds_2)
-  if(return_all_frac) return(c(frac_1, 1 - frac_1))
-  frac_1
-}
-
-BHtiterIIP_tau2iip = function(ID501, ID502){
-   log10(1+calc_BHID50(ID501, ID502))
-}
-BHneutIIP_tau2iip = function(ID501, ID502){
-  log10(1+ID501) + log10(1+ID502)
-}
-
-BHcalcs_tau = function(ID501, ID502){
-  tibble(
-    ID501 = ID501,
-    ID502 = ID502,
-    combined_titer = calc_BHID50(ID501, ID502),
-    combined_titer_IIP = log10(1+combined_titer),
-    combined_neut = titer2BH(ID501, ID502),
-    combined_neut_IIP = log10(1+ID501) + log10(1+ID502)
-    
-  )
-}
 
 create_virus_pkpd = function(virus_ic50s, virus_name = NA_character_,
                              pk_data_in){
@@ -81,9 +48,8 @@ create_virus_pkpd = function(virus_ic50s, virus_name = NA_character_,
 
 ```
 
-# Supplementary example
+## Supplementary example: total concentration vs. titer vs. IIP by interaction model
 
-## Via concentration ratios
 
 From earlier iteration, we want concentration ratios of 1:1 and 1:10; and
 \{1, 0.1\} IC50s.
@@ -111,7 +77,6 @@ conc_range = 10^(seq(-1, 2.5,  length = 200))
 
 ```{r supp-sim}
 
-
 single_virus_example =  map_df(supp_IC50_list, function(y) {
   purrr::map_df(c(1, 10), function(x) {
     tmp_pk = tibble(
@@ -137,6 +102,9 @@ single_virus_example_long = single_virus_example %>%
 
 ```
 
+### Total concentration vs. titer
+
+Total concentration and experimental titer maintain a consistent relationship across concentration ratios for a given IC50 set.
 
 ```{r simple-example-titer}
 
@@ -171,6 +139,9 @@ plot_grid(leg, id50_pred_pl+theme(legend.position = "none"), rel_heights = c(2,1
 
 ```
 
+### Total concentration vs. neutralization
+
+Total concentration and experimental neutralization have a complicated relationship with BH independence. The benefit of multiplicative independence is realized at high concentrations and balanced ratios, and is not captured by titer in the above plot.
 
 
 ```{r simple-example-neut}
@@ -196,6 +167,9 @@ neut_pred_pl
 
 ```
 
+### titer vs. neutralization
+
+Linking the results from above, the relationship between ID50 and IIP under Bliss-Hill independence is not uniquely defined. Different conclusions about optimal ratio can be reached depending on the metric. 
 
 ```{r simple-titer-iip}
 
@@ -229,8 +203,9 @@ iip_titer_pl
 
 ```
 
+### Supplementary figure - combining the results
 
-```{r supp-pl, fig.height=8, fig.width=6}
+```{r supp-pl-titer, fig.height=8, fig.width=6}
 
 main_figs = plot_grid(id50_pred_pl+theme(legend.position ="none"),
                                          neut_pred_pl, iip_titer_pl, nrow = 3,
@@ -241,97 +216,9 @@ plot_grid(leg, main_figs, nrow = 2, rel_heights = c(1.5,12))
 ```
 
 
-```{r bh-neut-by-virus, eval = F}
-#abandon??
-ex_pk_pl = pk_data %>%
-  ggplot(aes(x = Days, y = pmax(1, conc), colour = mab)) +
-  geom_line() +
-  scale_y_log10(limits = c(1, max(pk_data$conc))) +
-  labs(y = "Concentration", colour = "")
-ex_pk_pl
+## Example 2: Two mAb vs. single virus
 
-IC50_list = list(c(1, 0.1),
-                 c(1, 0.1))
-supp_example = map_df(1:length(IC50_list), ~create_virus_pkpd(IC50_list[[.]], ., 
-                                               pk_data = pk_data))
-supp_example %>%
-  ggplot(aes(x = Days, y = -log10(1 - BH_neut), colour = factor(virus))) +
-  geom_hline(yintercept = 2, linetype = "dotted") +
-  geom_line()
-supp_example %>%
-  ggplot(aes(x = Days, y = pmax(1, BH_ID50), colour = factor(virus))) +
-  geom_line() +
-  scale_y_log10()
-
-supp_example %>%
-  ggplot(aes(x = Days, y = log10(1+pmax(1, BH_ID50)), colour = factor(virus))) +
-  geom_line() +
-  geom_hline(yintercept = 2, linetype = "dotted") +
-  scale_y_log10()
-
-
-```
-
-# Two mAb vs. single virus
-
-Same IC50 -- highlights the issues with titer and BH.
-
-```{r twomab-onevirus, eval = F}
-IC501 = 1
-IC502 = 1
-
-single_virus_example = crossing(a = conc_range, b = conc_range) %>%
-  rowwise() %>%
-  mutate(
-    ID501 = a/IC501,
-    ID502 = b/IC502,
-    minNeut_ID50 = min(ID501, ID502),
-    minNeut_iip = log10(1+minNeut_ID50),
-    maxNeut_ID50 = max(ID501, ID502),
-    maxNeut_iip = log10(1+ maxNeut_ID50),
-    additivity_ID50 = ID501 + ID502,
-    additivity_iip = log10(1+additivity_ID50),
-    BH_ID50 = calc_BHID50(ID501, ID502),
-    BH_iip = -log10(1 - titer2BH(ID501, ID502))
-  ) %>%
-  gather(endpoint, value, -a, -b, -ID501, -ID502) %>%
-  separate(endpoint, into = c("interaction", "endpoint")) %>%
-  spread(endpoint, value)
-
-single_virus_example %>%
-  mutate(
-    interaction = interaction_labeller(interaction)
-  ) %>%
-  ggplot(aes(x = ID501, y = ID502, fill = iip)) +
-  geom_tile() +
-  scale_x_log10(expand = c(0,0), breaks = 10^(0:3), labels = c("1", "10", "100", "1000")) +
-  scale_y_log10(expand = c(0,0), breaks = 10^(0:3), labels = c("1", "10", "100", "1000")) +
-  geom_contour(aes(z = (10^iip - 1)), breaks = c(1, 10, 100, 1000)) +
-  geom_contour(aes(z = (ID50)), breaks = c(1, 10, 100, 1000), colour = "black") +
-  geom_text_contour(aes(z = log10(ID50 + 1)), breaks = (1:3), size = 5) +
-  facet_wrap(~interaction) +
-  labs(x = expression(paste("ID50"[1])), y = expression(paste("ID50"[2])),
-       fill = "Neutralization IIP") +
-  scale_fill_viridis_c() +
-  theme(legend.position = "top")
-
-# titer_iip_pl = tibble(
-#   ID50 = 10^seq(-1, 4, length = 10),
-#   iip = log10(1+ ID50),
-#   interaction = "single mAb"
-# )
-# 
-single_virus_example %>%
-  subset(interaction == "BH") %>%
-  ggplot(aes(x = ID50, y = iip)) +
-  geom_line() +
-  geom_step() +
-  scale_x_log10() +
-  labs(y = "BH IIP")
-
-```
-
-Focusing on additivity and BH to highlight non-uniqueness in BH. Here, we take use slightly different IC50s and plot combined ID50 vs. neutralization.
+Comparing additivity and BH highlights non-uniqueness of neutralization and experimental titer with BH. Here, we take use slightly different IC50s and plot combined ID50 vs. neutralization.
 
 ```{r single-virus-ic50s}
 
@@ -369,7 +256,7 @@ titer_iip_pl = tibble(
 ```
 
 
-```{r single-virus-pl, fig.height=8}
+```{r single-virus-pl, fig.height=8, warning=F}
 
 single_virus_example2 %>%
     mutate(

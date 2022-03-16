@@ -1,5 +1,5 @@
 ---
-title: "Theoretical optimization functions"
+title: "PKPD analysis functions"
 author: "Bryan Mayer"
 date: "`r Sys.Date()`"
 output:
@@ -20,7 +20,7 @@ This suite of functions performs calculations to convert between titer, neutrali
 
 ## 1-cmpt ratio optimization functions (`onecmptPKPD-sims.R`)
 
-This suite of functions performs PKPD simulations for varying PK/PD inputs sampling viruses accordingly assuming a 1-cmpt PK model. These functions were written to have generalized utility. Functions from here were also used for bi-specific synergy.
+This suite of functions performs PKPD simulations for varying PK/PD inputs sampling viruses accordingly assuming a 1-cmpt PK model. These functions were written to have generalized utility. Functions from here were also used for the [simulation study](https://github.com/bryanmayer/pkpd-bnab-project/blob/main/code/simulation-batch.R) and the bi-specific synergy simulations.
 
 ```{r, code=readLines("../code/onecmptPKPD-sims.R"), eval = F}
 ```
@@ -32,6 +32,22 @@ This suite of functions performs PKPD simulations for varying PK/PD inputs sampl
 These functions follow similar structure to 1-cmpt but were specifically curated for this 3-bnab case study. They expect labels for 3BNC117, 10-1074, and VRC07-523LS; perform 2-cmpt PK simulations; and utilize titer-protection dose-response 5PL model relationships fit as drc objects.
 
 ```{r, code=readLines("../code/empirical-opt-funs.R"), eval = F}
+```
+
+### workflowr functions
+
+## Build project (`build_all.R`)
+
+Publishes the project website by compiling all of the Rmarkdown files using the workflowr API.
+
+```{r, code=readLines("../code/build_all.R"), eval = F}
+```
+
+## Publish project (`publish_all.R`)
+
+Publishes the project website by compiling all of the Rmarkdown files using the workflowr API.
+
+```{r, code=readLines("../code/publish_all.R"), eval = F}
 ```
 
 

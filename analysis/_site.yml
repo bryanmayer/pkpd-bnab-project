@@ -17,24 +17,22 @@ navbar:
       href: https://github.com/bryanmayer/pkpd-bnab-project/tree/main/output/sim_results
   - text: Tables
     menu:
-    - text: Supp. Table 1
-      href:
     - text: Supp. Table 2
-      href:
+      href: https://github.com/bryanmayer/pkpd-bnab-project/blob/main/output/empirical-opt/empirical-opt-ratios.csv
   - text: Figures
     menu:
     - text: Figure 4
-      href:
+      href: https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/bispecific.Rmd/paper-plot-1.png
     - text: Figure 5
-      href:
+      href: https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/empirical-case-study.Rmd/empirical-paper-pl-1.png
     - text: Supp. Figure 1
-      href:
+      href: https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/hill-slope-meta.Rmd/hill-slope-pl-1.png
     - text: Supp. Figure 3
-      href:
+      href: https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/empirical-case-study.Rmd/amp-pegu-dr-1.png
     - text: Supp. Figure 4
-      href:
+      href: https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/titer-analysis.Rmd/supp-pl-titer-1.png
     - text: Supp. Figure 5
-      href:
+      href: https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/empirical-case-study.Rmd/empirical-paper-marginal-1.png
 output:
   workflowr::wflow_html:
     toc: yes
