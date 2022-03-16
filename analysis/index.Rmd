@@ -22,7 +22,7 @@ Plos Comp Bio. *Accepted.* 2022.
 
 ### Primary Analyses
 
-- [Code and functions used throughout analysis](opt-sims-background.html)
+- [Code and functions used throughout analysis.](opt-sims-background.html)
 - Theoretical sensitivity optimization analysis.
   - [Script used to conduct simulations.](https://github.com/bryanmayer/pkpd-bnab-project/blob/main/code/simulation-batch.R)
   - [Accessing raw simulation results.](process-sims.html)
@@ -40,5 +40,5 @@ Plos Comp Bio. *Accepted.* 2022.
 
 - [Pulling CATNAP data.](process_catnap.html)
 - [PK data for combination optimization.](https://github.com/bryanmayer/pkpd-bnab-project/tree/main/data/empirical-pk-data/)
-- [AMP IC80 vs. PE data.](https://www.nejm.org/na101/home/literatum/publisher/mms/journals/content/nejm/2021/nejm_2021.384.issue-11/nejmoa2031738/20210611/images/img_small/nejmoa2031738_f3.jpeg) - [data here](https://github.com/bryanmayer/pkpd-bnab-project/blob/main/data/nejm_fig3a.xlsx)
+- [AMP IC80 vs. PE data](https://www.nejm.org/na101/home/literatum/publisher/mms/journals/content/nejm/2021/nejm_2021.384.issue-11/nejmoa2031738/20210611/images/img_small/nejmoa2031738_f3.jpeg) - [data here.](https://github.com/bryanmayer/pkpd-bnab-project/blob/main/data/nejm_fig3a.xlsx)
 

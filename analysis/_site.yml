@@ -33,6 +33,8 @@ navbar:
       href: https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/titer-analysis.Rmd/supp-pl-titer-1.png
     - text: Supp. Figure 5
       href: https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/empirical-case-study.Rmd/empirical-paper-marginal-1.png
+  - text: GitHub
+    href: https://github.com/bryanmayer/pkpd-bnab-project/
 output:
   workflowr::wflow_html:
     toc: yes
