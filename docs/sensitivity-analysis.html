@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Bryan Mayer, Daniel Reeves (python)" />
+
+
+<title>Sensitivity correlation analysis code (python)</title>
+
+<script src="site_libs/header-attrs-2.11/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/journal.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">bNAb-PKPD-Optimization</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Analysis Overview</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Data
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/tree/main/data">Raw Data</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/tree/main/output">Results Output</a>
+    </li>
+    <li>
+      <a href="process-sims.html">Simulation Data Processing</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/tree/main/output/sim_results">Simulation Data</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Tables
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/output/empirical-opt/empirical-opt-ratios.csv">Supp. Table 2</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Figures
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/bispecific.Rmd/paper-plot-1.png">Figure 4</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/empirical-case-study.Rmd/empirical-paper-pl-1.png">Figure 5</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/hill-slope-meta.Rmd/hill-slope-pl-1.png">Supp. Figure 1</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/empirical-case-study.Rmd/amp-pegu-dr-1.png">Supp. Figure 3</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/titer-analysis.Rmd/supp-pl-titer-1.png">Supp. Figure 4</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/empirical-case-study.Rmd/empirical-paper-marginal-1.png">Supp. Figure 5</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="https://github.com/bryanmayer/pkpd-bnab-project/">GitHub</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Sensitivity correlation analysis code (python)</h1>
+<h4 class="author">Bryan Mayer, Daniel Reeves (python)</h4>
+<h4 class="date">3/14/2022</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2022-03-15
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>pkpd-bnab-project/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version 1.7.0). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20201117code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20201117)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20201117code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20201117)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombryanmayerpkpdbnabprojecttreebf4e271744eb43fc75970b229a913b3e7dcc6e10targetblankbf4e271a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bryanmayer/pkpd-bnab-project/tree/bf4e271744eb43fc75970b229a913b3e7dcc6e10" target="_blank">bf4e271</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcombryanmayerpkpdbnabprojecttreebf4e271744eb43fc75970b229a913b3e7dcc6e10targetblankbf4e271a" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/bryanmayer/pkpd-bnab-project/tree/bf4e271744eb43fc75970b229a913b3e7dcc6e10" target="_blank">bf4e271</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.DS_Store
+    Ignored:    analysis/.Rhistory
+    Ignored:    code/.DS_Store
+    Ignored:    code/python/.DS_Store
+    Ignored:    code/python/.ipynb_checkpoints/
+    Ignored:    code/tmp-compare-old-new.R
+    Ignored:    code/tmp-hill-exploration.R
+    Ignored:    code/tmp-ratio-grid-search.R
+    Ignored:    data/.DS_Store
+    Ignored:    output/.DS_Store
+    Ignored:    output/sim_results/.DS_Store
+    Ignored:    output/sim_results/grid_full_mean2020-11-29.csv
+    Ignored:    output/sim_results/opt_ratio_summary.csv
+    Ignored:    output/sim_results/opt_ratio_wide.csv
+    Ignored:    output/sim_results/optimum_wide.csv
+
+Untracked files:
+    Untracked:  Untitled.R
+    Untracked:  code/python/correlations-optimal.Rmd
+    Untracked:  code/python/correlations.Rmd
+    Untracked:  correlations-optimal.R
+    Untracked:  data/dose10_scrape.csv
+    Untracked:  data/dose30_scrape.csv
+    Untracked:  data/jvi.01909-20-s0001.xlsx
+    Untracked:  output/bispecific_data.rda
+    Untracked:  output/empirical-opt/double-opt-amp.rda
+    Untracked:  output/empirical-opt/double-opt.rda
+    Untracked:  output/empirical-opt/example-empirical-pk-dat.csv
+    Untracked:  output/empirical-opt/triple-opt-amp.rda
+    Untracked:  output/empirical-opt/triple-opt.rda
+    Untracked:  output/processed_catnap_assay.csv
+    Untracked:  output/processed_catnap_assay.rds
+    Untracked:  sim-reproducibility-test.R
+
+Unstaged changes:
+    Modified:   code/publish_all.R
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/sensitivity-analysis.Rmd</code>) and HTML (<code>docs/sensitivity-analysis.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/bb4f245140dc99933a9f37f182a944c4e447ba75/analysis/sensitivity-analysis.Rmd" target="_blank">bb4f245</a>
+</td>
+<td>
+Bryan
+</td>
+<td>
+2022-03-15
+</td>
+<td>
+final version of code
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="background" class="section level2">
+<h2>Background</h2>
+<p>The sensitivity analysis of the theoretical simulations was performed using python jupyter notebooks. To display the code here, the notebooks were converted into Rmd.</p>
+<pre class="r"><code>rmarkdown:::convert_ipynb(&quot;code/python/correlations.ipynb&quot;)
+rmarkdown:::convert_ipynb(&quot;code/python/correlations-optimal.ipynb&quot;)</code></pre>
+<p>The code echoed here is still clunky and the notebooks are best viewed using <code>jupyter notebook</code> within the <code>code/python/</code> directory.</p>
+<p><a href="https://github.com/bryanmayer/pkpd-bnab-project/tree/main/code/python" class="uri">https://github.com/bryanmayer/pkpd-bnab-project/tree/main/code/python</a></p>
+</div>
+<div id="pkpd-outcome-sensitivity-figure-2-correlations.ipynb" class="section level2">
+<h2>PKPD outcome sensitivity (Figure 2) (<code>correlations.ipynb</code>)</h2>
+<pre class="python"><code>---
+title: An R Markdown document converted from &quot;code/python/correlations.ipynb&quot;
+output: html_document
+---
+
+```{python}
+#!/usr/bin/python
+%matplotlib inline
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import scipy.stats as st
+import seaborn as sns
+
+sns.set_style(&quot;ticks&quot;)
+```
+
+```{python}
+#import latest simulation data
+#df=pd.read_csv(&#39;grid_search.csv&#39;)
+df=pd.read_csv(&#39;grid_full_mean2020-11-29.csv&#39;)
+
+df.columns = df.columns.str.replace(&#39;additivity&#39;, &#39;add&#39;)
+df.columns = df.columns.str.replace(&#39;Neut&#39;, &#39;&#39;)
+df.columns = df.columns.str.replace(&#39;_mean&#39;, &#39;&#39;)
+df.columns = df.columns.str.replace(&#39;coverage&#39;, &#39;f&#39;)
+
+#sensitivity variables
+varz=[&#39;c0&#39;, &#39;ratio&#39;, &#39;hl_1&#39;, &#39;hl_2&#39;, &#39;omega_1&#39;, &#39;omega_2&#39;, &#39;muIC50_1&#39;,
+       &#39;muIC50_2&#39;, &#39;sigIC50_1&#39;, &#39;sigIC50_2&#39;]
+```
+
+```{python}
+#change to fraction resistant
+df[&#39;omega_1&#39;]=1-df[&#39;omega_1&#39;]
+df[&#39;omega_2&#39;]=1-df[&#39;omega_2&#39;]
+```
+
+```{python}
+df = df[(df[&#39;muIC50_1&#39;]&gt;-3) &amp; (df[&#39;muIC50_2&#39;]&gt;-3)]
+```
+
+```{python}
+#restrict to lower doses
+df = df[df[&#39;c0&#39;]&lt;2000]
+```
+
+```{python}
+df.shape
+```
+
+```{python}
+#lists of types
+
+combo_model = [&#39;min&#39;,&#39;BH&#39;,&#39;add&#39;]
+
+endpoint = [&#39;ID50&#39;,&#39;iip&#39;,&#39;ID50log10&#39;,&#39;neut&#39;,
+                &#39;ID50_f1&#39;,&#39;ID50_f10&#39;,&#39;ID50_f100&#39;,&#39;ID50_f1000&#39;,&#39;ID50_f1e4&#39;,
+                &#39;iip_f1&#39;,&#39;iip_f2&#39;,&#39;iip_f3&#39;,&#39;iip_f4&#39;,]
+
+#pick thresholds of 100 and iip=2
+endpoint_less = [&#39;ID50&#39;,&#39;iip&#39;,&#39;ID50log10&#39;,&#39;neut&#39;,&#39;ID50_f100&#39;,&#39;iip_f2&#39;]
+
+when = [&#39;auc&#39;,&#39;trough&#39;]
+```
+
+```{python}
+#get better list of outcome names
+
+for w in when:
+    outz=[]
+    for cm in combo_model:
+        for m in endpoint_less:
+            outz.append(cm+&#39;_&#39;+m+&#39;_&#39;+w)
+    
+    tdf=df[outz]
+    tdf.columns = tdf.columns.str.replace(&#39;_&#39;+w, &#39;&#39;) #remove the trough name from the column
+
+    outcome_corr_mat=tdf.corr(method=&quot;spearman&quot;)
+
+    g=sns.clustermap(outcome_corr_mat, annot=False, vmin=0,vmax=1,cmap=&#39;viridis&#39;, figsize=(6,5))
+    plt.setp(g.ax_heatmap.get_yticklabels(), rotation=0)  # For y axis
+    plt.setp(g.ax_heatmap.get_xticklabels(), rotation=90) # For x axis
+
+    plt.title(&#39;Spearman correlation, &#39;+w)
+    plt.savefig(&#39;../figures/cluster_w_&#39;+w+&#39;3.pdf&#39;,dpi=600)
+```
+
+```{python}
+outzmaxadd= [&#39;max_ID50_&#39;+w,
+ &#39;max_iip_&#39;+w,
+ &#39;max_ID50log10_&#39;+w,
+ &#39;max_neut_&#39;+w,
+ &#39;max_ID50_f100_&#39;+w,
+ &#39;max_iip_f2_&#39;+w,
+ &#39;add_ID50_&#39;+w,
+ &#39;add_iip_&#39;+w,
+ &#39;add_ID50log10_&#39;+w,
+ &#39;add_neut_&#39;+w,
+ &#39;add_ID50_f100_&#39;+w,
+ &#39;add_iip_f2_&#39;+w]
+
+
+tdf=df[outzmaxadd]
+outcome_corr_mat=tdf.corr(method=&quot;spearman&quot;)
+
+g=sns.clustermap(outcome_corr_mat, annot=False, vmin=0,vmax=1,cmap=&#39;viridis&#39;, figsize=(4,3))
+plt.setp(g.ax_heatmap.get_yticklabels(), rotation=0)  # For y axis
+plt.setp(g.ax_heatmap.get_xticklabels(), rotation=90) # For x axis
+
+plt.title(&#39;Spearman correlation, &#39;+w)
+plt.savefig(&#39;../figures/cluster_maxadd_&#39;+w+&#39;.pdf&#39;,dpi=600)
+
+
+print(np.mean(np.mean(outcome_corr_mat[outcome_corr_mat&lt;1],1)),
+        np.min(np.min(outcome_corr_mat[outcome_corr_mat&lt;1],1)),
+        np.max(np.max(outcome_corr_mat[outcome_corr_mat&lt;1],1)),
+        np.std(np.std(outcome_corr_mat[outcome_corr_mat&lt;1],1))
+     )
+```
+
+```{python}
+#sns.pairplot(tdf)
+```
+
+```{python}
+#the reordered outputs for trough clustering
+clustered_outz = np.array(outz)[g.dendrogram_col.reordered_ind]
+
+clustered_outz
+```
+
+```{python}
+#plot sensitivity correlations against all variables with clustered labels
+
+varz = [
+    &#39;hl_1&#39;,
+    &#39;hl_2&#39;,
+    &#39;omega_1&#39;,
+    &#39;omega_2&#39;,
+    &#39;muIC50_1&#39;,
+    &#39;muIC50_2&#39;,
+    &#39;sigIC50_1&#39;,
+    &#39;sigIC50_2&#39;,
+    &#39;c0&#39;,
+    &#39;ratio&#39;]
+
+tdf=df[list(clustered_outz)+varz]
+
+outvar_corr_mat=tdf.corr(method=&quot;spearman&quot;)
+
+plt.figure(figsize=(8,5))
+#sns.heatmap(outvar_corr_mat, annot=False, vmin=-1,vmax=1,cmap=&#39;PiYG&#39;)
+sns.heatmap(outvar_corr_mat.loc[list(clustered_outz),varz], annot=True, vmin=-1,vmax=1,cmap=&#39;PiYG&#39;)
+plt.title(&#39;Spearman correlation&#39;)
+
+#plt.yticks()
+plt.tight_layout()
+plt.savefig(&#39;../figures/corrmat_outcome_clustersorted_sensitivity4.pdf&#39;,dpi=600)
+```
+
+```{python}
+#correlate with variables -- broken into 5 main categories with representatives
+
+final_outz = [&#39;BH_ID50_&#39;+w,&#39;add_ID50log10_&#39;+w,&#39;add_iip_f2_&#39;+w,&#39;min_iip_f2_&#39;+w]
+
+tdf=df[final_outz+varz]
+
+outvar_corr_mat=tdf.corr(method=&quot;spearman&quot;).round(2)
+
+plt.figure(figsize=(9,2.5))
+#sns.heatmap(outvar_corr_mat, annot=False, vmin=-1,vmax=1,cmap=&#39;PiYG&#39;)
+sns.heatmap(outvar_corr_mat.loc[final_outz,varz], annot=True, vmin=-1,vmax=1,cmap=&#39;PiYG&#39;)
+plt.title(&#39;Spearman correlation&#39;)
+plt.tight_layout()
+plt.savefig(&#39;../figures/corrmat_outcome_categories_sensitivity4.pdf&#39;,dpi=600)
+```
+
+```{python}
+#look at the distribution of optimal ratio across all parameters
+
+optr_avg=[]
+optr_std=[]
+outz=[]
+top95_l=[]
+plt.figure(figsize=(4,10))
+ii=0
+for osl in list(clustered_outz):
+    sorted_r = np.array(df[&#39;ratio&#39;][np.argsort(-df[osl])])
+    sorted_c = np.array(df[osl][np.argsort(-df[osl])])
+
+    top95 = sorted_c[sorted_c&gt;=(0.95*sorted_c[0])] #more than 95% of max
+
+    optr_avg.append(np.mean(sorted_r[:len(top95)]))
+    optr_std.append(np.std(sorted_r[:len(top95)]))
+
+    top95_l.append(len(top95))
+
+    #plot if not empty
+    if list(sorted_r[:len(top95)]):
+        plt.violinplot(sorted_r[:len(top95)],positions=[-ii],vert=False,showextrema=False,showmedians=True)
+
+    ii+=1
+#plt.errorbar(optr_avg,np.arange(len(optr)),xerr=optr_std)#,vert=False,showextrema=False,showmedians=True)
+
+plt.xlabel(&#39;optimal ratio&#39;)
+plt.yticks(-np.arange(len(clustered_outz)),clustered_outz)#,rotation=90)
+plt.tight_layout()
+plt.savefig(&#39;../figures/optr_violins4.pdf&#39;,dpi=600)
+```
+
+```{python}
+top95
+```
+
+```{python}
+#% of simulation within maximum value
+
+plt.figure(figsize=(4,4))
+plt.step(np.array(top95_l)/len(df)*100,-np.arange(len(top95_l)),marker=&#39;s&#39;)
+#plt.semilogx()
+plt.xlabel(&#39;% of sims in top 95% of endpoint&#39;)
+plt.yticks(-np.arange(len(clustered_outz)),clustered_outz)#,rotation=90)
+#plt.xticks(,rotation=90)
+plt.xlim([-5,100])
+plt.tight_layout()
+plt.savefig(&#39;../figures/optr_fracintop95_4.pdf&#39;,dpi=600)
+
+```
+
+```{python}
+sorted_c
+```</code></pre>
+</div>
+<div id="optimal-ratio-sensitivity-figure-3-correlations-optimal.ipynb" class="section level2">
+<h2>Optimal ratio sensitivity (Figure 3) (<code>correlations-optimal.ipynb</code>)</h2>
+<pre class="python"><code>---
+title: An R Markdown document converted from &quot;code/python/correlations-optimal.ipynb&quot;
+output: html_document
+---
+
+```{python}
+#!/usr/bin/python
+%matplotlib inline
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import scipy.stats as st
+import seaborn as sns
+
+sns.set_style(&quot;ticks&quot;)
+```
+
+```{python}
+#import latest simulation data
+#df=pd.read_csv(&#39;grid_search.csv&#39;)
+df=pd.read_csv(&#39;../../output/sim_results/opt_ratio_wide.csv&#39;)
+
+df.columns = df.columns.str.replace(&#39;additivity&#39;, &#39;add&#39;)
+df.columns = df.columns.str.replace(&#39;Neut&#39;, &#39;&#39;)
+df.columns = df.columns.str.replace(&#39;_mean&#39;, &#39;&#39;)
+df.columns = df.columns.str.replace(&#39;coverage&#39;, &#39;f&#39;)
+
+#sensitivity variables
+varz=[&#39;c0&#39;, &#39;ratio&#39;, &#39;hl_1&#39;, &#39;hl_2&#39;, &#39;omega_1&#39;, &#39;omega_2&#39;, &#39;muIC50_1&#39;,
+       &#39;muIC50_2&#39;, &#39;sigIC50_1&#39;, &#39;sigIC50_2&#39;]
+```
+
+```{python}
+#change to fraction resistant
+df[&#39;omega_1&#39;]=1-df[&#39;omega_1&#39;]
+df[&#39;omega_2&#39;]=1-df[&#39;omega_2&#39;]
+```
+
+```{python}
+df = df[(df[&#39;muIC50_1&#39;]&gt;-3) &amp; (df[&#39;muIC50_2&#39;]&gt;-3)]
+```
+
+```{python}
+#restrict to lower doses
+df = df[df[&#39;c0&#39;]&lt;2000]
+```
+
+```{python}
+#lists of types
+
+combo_model = [&#39;min&#39;,&#39;BH&#39;,&#39;add&#39;]
+
+endpoint = [&#39;ID50&#39;,&#39;iip&#39;,&#39;ID50log10&#39;,&#39;neut&#39;,
+                &#39;ID50_f1&#39;,&#39;ID50_f10&#39;,&#39;ID50_f100&#39;,&#39;ID50_f1000&#39;,&#39;ID50_f1e4&#39;,
+                &#39;iip_f1&#39;,&#39;iip_f2&#39;,&#39;iip_f3&#39;,&#39;iip_f4&#39;,]
+
+#pick thresholds of 100 and iip=2
+endpoint_less = [&#39;ID50&#39;,&#39;iip&#39;,&#39;ID50log10&#39;,&#39;neut&#39;,&#39;ID50_f100&#39;,&#39;iip_f2&#39;]
+
+when = [&#39;auc&#39;,&#39;trough&#39;]
+```
+
+```{python}
+df.shape
+```
+
+```{python}
+#get better list of outcome names
+
+for w in when:
+    outz=[]
+    for cm in combo_model:
+        for m in endpoint_less:
+            outz.append(cm+&#39;_&#39;+m+&#39;_&#39;+w)
+    
+    tdf=df[outz]
+    tdf.columns = tdf.columns.str.replace(&#39;_&#39;+w, &#39;&#39;) #remove the trough name from the column
+
+    outcome_corr_mat=tdf.corr(method=&quot;spearman&quot;)
+
+    g=sns.clustermap(outcome_corr_mat, annot=False, vmin=-1,vmax=1,cmap=&#39;PiYG&#39;, figsize=(6,5))
+    plt.setp(g.ax_heatmap.get_yticklabels(), rotation=0)  # For y axis
+    plt.setp(g.ax_heatmap.get_xticklabels(), rotation=90) # For x axis
+
+    plt.title(&#39;Spearman correlation, &#39;+w)
+    plt.savefig(&#39;../../output/sim_results/figures/cluster_w_&#39;+w+&#39;3.pdf&#39;,dpi=600)
+```
+
+```{python}
+#the reordered outputs for trough clustering
+clustered_outz = np.array(outz)[g.dendrogram_col.reordered_ind]
+
+clustered_outz
+```
+
+```{python}
+outzmaxadd= [&#39;max_ID50_&#39;+w,
+ &#39;max_iip_&#39;+w,
+ &#39;max_ID50log10_&#39;+w,
+ &#39;max_neut_&#39;+w,
+ &#39;max_ID50_f100_&#39;+w,
+ &#39;max_iip_f2_&#39;+w,
+ &#39;add_ID50_&#39;+w,
+ &#39;add_iip_&#39;+w,
+ &#39;add_ID50log10_&#39;+w,
+ &#39;add_neut_&#39;+w,
+ &#39;add_ID50_f100_&#39;+w,
+ &#39;add_iip_f2_&#39;+w]
+
+
+tdf=df[outzmaxadd]
+outcome_corr_mat=tdf.corr(method=&quot;spearman&quot;)
+
+g=sns.clustermap(outcome_corr_mat, annot=False, vmin=0,vmax=1,cmap=&#39;viridis&#39;, figsize=(4,3))
+plt.setp(g.ax_heatmap.get_yticklabels(), rotation=0)  # For y axis
+plt.setp(g.ax_heatmap.get_xticklabels(), rotation=90) # For x axis
+
+plt.title(&#39;Spearman correlation, &#39;+w)
+plt.savefig(&#39;../../output/sim_results/figures/cluster_maxadd_&#39;+w+&#39;.pdf&#39;,dpi=600)
+
+
+print(np.mean(np.mean(outcome_corr_mat[outcome_corr_mat&lt;1],1)),
+        np.min(np.min(outcome_corr_mat[outcome_corr_mat&lt;1],1)),
+        np.max(np.max(outcome_corr_mat[outcome_corr_mat&lt;1],1)),
+        np.std(np.std(outcome_corr_mat[outcome_corr_mat&lt;1],1))
+     )
+```
+
+```{python}
+sns.pairplot(tdf)
+```
+
+```{python}
+#plot sensitivity correlations against all variables with clustered labels
+
+varz = [
+    &#39;hl_1&#39;,
+    &#39;hl_2&#39;,
+    &#39;omega_1&#39;,
+    &#39;omega_2&#39;,
+    &#39;muIC50_1&#39;,
+    &#39;muIC50_2&#39;,
+    &#39;sigIC50_1&#39;,
+    &#39;sigIC50_2&#39;,
+    &#39;c0&#39;]
+
+tdf=df[list(clustered_outz)+varz]
+
+outvar_corr_mat=tdf.corr(method=&quot;spearman&quot;)
+
+plt.figure(figsize=(8,5))
+#sns.heatmap(outvar_corr_mat, annot=False, vmin=-1,vmax=1,cmap=&#39;PiYG&#39;)
+sns.heatmap(outvar_corr_mat.loc[list(clustered_outz),varz], annot=True, vmin=-1,vmax=1,cmap=&#39;PiYG&#39;)
+plt.title(&#39;Spearman correlation&#39;)
+
+#plt.yticks()
+plt.tight_layout()
+plt.savefig(&#39;../../output/sim_results/figures/outcomes_opt_vs_varz.pdf&#39;,dpi=600)
+```
+
+```{python}
+clustered_outz
+```
+
+```{python}
+#correlate with variables -- broken into 5 main categories with representatives
+
+final_outz = [&#39;min_neut_trough&#39;, 
+               &#39;min_iip_f2_trough&#39;, 
+              &#39;BH_neut_trough&#39;, 
+               &#39;add_ID50_trough&#39;, 
+       &#39;BH_ID50_f100_trough&#39;, 
+          &#39;BH_iip_trough&#39;,
+       ]
+
+tdf=df[final_outz+varz]
+
+outvar_corr_mat=tdf.corr(method=&quot;spearman&quot;).round(2)
+
+plt.figure(figsize=(7,2.5))
+#sns.heatmap(outvar_corr_mat, annot=False, vmin=-1,vmax=1,cmap=&#39;PiYG&#39;)
+sns.heatmap(outvar_corr_mat.loc[final_outz,varz], annot=True, vmin=-1,vmax=1,cmap=&#39;PiYG&#39;)
+plt.title(&#39;Spearman correlation&#39;)
+plt.tight_layout()
+plt.savefig(&#39;../../output/sim_results/figures/reducedoutcomes_opt_vs_varz.pdf&#39;,dpi=600)
+```</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.1.0 (2021-05-18)
+Platform: x86_64-apple-darwin17.0 (64-bit)
+Running under: macOS Catalina 10.15.7
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRblas.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] workflowr_1.7.0
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_1.0.7       bslib_0.2.5.1    compiler_4.1.0   pillar_1.6.1    
+ [5] later_1.2.0      git2r_0.28.0     jquerylib_0.1.4  tools_4.1.0     
+ [9] getPass_0.2-2    digest_0.6.29    lattice_0.20-44  jsonlite_1.7.3  
+[13] evaluate_0.14    tibble_3.1.2     lifecycle_1.0.1  png_0.1-7       
+[17] pkgconfig_2.0.3  rlang_1.0.1      Matrix_1.3-3     cli_3.1.1       
+[21] rstudioapi_0.13  yaml_2.2.2       xfun_0.29        fastmap_1.1.0   
+[25] httr_1.4.2       stringr_1.4.0    knitr_1.37       sass_0.4.0      
+[29] fs_1.5.2         vctrs_0.3.8      grid_4.1.0       rprojroot_2.0.2 
+[33] reticulate_1.24  glue_1.6.1       R6_2.5.1         processx_3.5.2  
+[37] fansi_0.5.0      rmarkdown_2.11   callr_3.7.0      magrittr_2.0.2  
+[41] whisker_0.4      ps_1.6.0         promises_1.2.0.1 htmltools_0.5.2 
+[45] ellipsis_0.3.2   httpuv_1.6.1     utf8_1.2.1       stringi_1.7.6   
+[49] crayon_1.4.2    </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

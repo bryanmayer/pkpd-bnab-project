@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Bryan Mayer" />
+
+<meta name="date" content="2022-01-05" />
+
+<title>Bispecific Analysis</title>
+
+<script src="site_libs/header-attrs-2.11/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/journal.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">bNAb-PKPD-Optimization</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Analysis Overview</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Data
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/tree/main/data">Raw Data</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/tree/main/output">Results Output</a>
+    </li>
+    <li>
+      <a href="process-sims.html">Simulation Data Processing</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/tree/main/output/sim_results">Simulation Data</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Tables
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/output/empirical-opt/empirical-opt-ratios.csv">Supp. Table 2</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Figures
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/bispecific.Rmd/paper-plot-1.png">Figure 4</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/empirical-case-study.Rmd/empirical-paper-pl-1.png">Figure 5</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/hill-slope-meta.Rmd/hill-slope-pl-1.png">Supp. Figure 1</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/empirical-case-study.Rmd/amp-pegu-dr-1.png">Supp. Figure 3</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/titer-analysis.Rmd/supp-pl-titer-1.png">Supp. Figure 4</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/empirical-case-study.Rmd/empirical-paper-marginal-1.png">Supp. Figure 5</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="https://github.com/bryanmayer/pkpd-bnab-project/">GitHub</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Bispecific Analysis</h1>
+<h4 class="author">Bryan Mayer</h4>
+<h4 class="date">2022-01-05</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2022-03-15
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>pkpd-bnab-project/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version 1.7.0). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20201117code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20201117)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20201117code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20201117)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombryanmayerpkpdbnabprojecttreebf4e271744eb43fc75970b229a913b3e7dcc6e10targetblankbf4e271a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bryanmayer/pkpd-bnab-project/tree/bf4e271744eb43fc75970b229a913b3e7dcc6e10" target="_blank">bf4e271</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcombryanmayerpkpdbnabprojecttreebf4e271744eb43fc75970b229a913b3e7dcc6e10targetblankbf4e271a" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/bryanmayer/pkpd-bnab-project/tree/bf4e271744eb43fc75970b229a913b3e7dcc6e10" target="_blank">bf4e271</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.DS_Store
+    Ignored:    analysis/.Rhistory
+    Ignored:    code/.DS_Store
+    Ignored:    code/python/.DS_Store
+    Ignored:    code/python/.ipynb_checkpoints/
+    Ignored:    code/tmp-compare-old-new.R
+    Ignored:    code/tmp-hill-exploration.R
+    Ignored:    code/tmp-ratio-grid-search.R
+    Ignored:    data/.DS_Store
+    Ignored:    output/.DS_Store
+    Ignored:    output/sim_results/.DS_Store
+    Ignored:    output/sim_results/grid_full_mean2020-11-29.csv
+    Ignored:    output/sim_results/opt_ratio_summary.csv
+    Ignored:    output/sim_results/opt_ratio_wide.csv
+    Ignored:    output/sim_results/optimum_wide.csv
+
+Untracked files:
+    Untracked:  Untitled.R
+    Untracked:  code/python/correlations-optimal.Rmd
+    Untracked:  code/python/correlations.Rmd
+    Untracked:  correlations-optimal.R
+    Untracked:  data/dose10_scrape.csv
+    Untracked:  data/dose30_scrape.csv
+    Untracked:  data/jvi.01909-20-s0001.xlsx
+    Untracked:  output/bispecific_data.rda
+    Untracked:  output/empirical-opt/double-opt-amp.rda
+    Untracked:  output/empirical-opt/double-opt.rda
+    Untracked:  output/empirical-opt/example-empirical-pk-dat.csv
+    Untracked:  output/empirical-opt/triple-opt-amp.rda
+    Untracked:  output/empirical-opt/triple-opt.rda
+    Untracked:  output/processed_catnap_assay.csv
+    Untracked:  output/processed_catnap_assay.rds
+    Untracked:  sim-reproducibility-test.R
+
+Unstaged changes:
+    Modified:   code/publish_all.R
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/bispecific.Rmd</code>) and HTML (<code>docs/bispecific.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/bb4f245140dc99933a9f37f182a944c4e447ba75/analysis/bispecific.Rmd" target="_blank">bb4f245</a>
+</td>
+<td>
+Bryan
+</td>
+<td>
+2022-03-15
+</td>
+<td>
+final version of code
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/929c62ccd49fa48cc23bdbf232709913afe0c1e5/analysis/bispecific.Rmd" target="_blank">929c62c</a>
+</td>
+<td>
+Bryan
+</td>
+<td>
+2022-03-13
+</td>
+<td>
+data documentation
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/41337fd754fb4260de641b08bb6a3b9b4ed400a1/analysis/bispecific.Rmd" target="_blank">41337fd</a>
+</td>
+<td>
+Bryan
+</td>
+<td>
+2022-03-13
+</td>
+<td>
+start of documentation cleanup
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/a3b37fd9beda6f91eca466b77650ae1364427988/analysis/bispecific.Rmd" target="_blank">a3b37fd</a>
+</td>
+<td>
+Bryan
+</td>
+<td>
+2022-01-04
+</td>
+<td>
+method figures for empirical
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/ce0f69510353d11ccb220d56e9ad56185004c4a6/analysis/bispecific.Rmd" target="_blank">ce0f695</a>
+</td>
+<td>
+Bryan
+</td>
+<td>
+2021-07-11
+</td>
+<td>
+edits for bispecific for final analysis
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/d28596ae24f9379bed8eb72316dc9a7848a5c8dd/analysis/bispecific.Rmd" target="_blank">d28596a</a>
+</td>
+<td>
+Bryan
+</td>
+<td>
+2021-03-23
+</td>
+<td>
+updated synergy code, added for all interactions
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/300998276d2b2c82c3845a20898b4669692890fe/analysis/bispecific.Rmd" target="_blank">3009982</a>
+</td>
+<td>
+Bryan
+</td>
+<td>
+2021-03-23
+</td>
+<td>
+scripts for december draft of paper
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="setup" class="section level2">
+<h2>Setup</h2>
+<pre class="r"><code>library(tidyverse)
+library(kableExtra)
+library(cowplot)
+library(viridis)
+library(VISCPK)
+
+theme_set(theme_bw() + theme(legend.position = &quot;top&quot;, legend.key.width = unit(1, &quot;cm&quot;),
+                             legend.box = &quot;vertical&quot;))
+source(&quot;code/neutralization-funs.R&quot;)
+source(&quot;code/onecmptPKPD-sims.R&quot;)
+
+ratio_lab = &quot;mAb1/total dose&quot;
+ratio_breaks = 0:4/4
+ratio_labels = c(&quot;mAb 2&quot;, 1:3/4, &quot;mAb 1&quot;)
+ratio_labels_x = c(&quot;All\nmAb 2&quot;, 1:3/4, &quot;All\nmAb 1&quot;)
+
+doses = c(150, 300, 600, 1200, 2400)
+
+interaction_labeller = function(interaction_var){
+  factor(interaction_var,
+         labels = c(&quot;Min. Neut.&quot;, &quot;Max. Neut.&quot;, &quot;Additivity&quot;, &quot;Bliss-Hill&quot;),
+         levels = c(&quot;minNeut&quot;, &quot;maxNeut&quot;, &quot;additivity&quot;, &quot;BH&quot;)
+  )
+}</code></pre>
+<pre class="r"><code>load(&quot;output/bispecific_data.rda&quot;)</code></pre>
+</div>
+<div id="background" class="section level2">
+<h2>Background</h2>
+<p>Combine a superb bnab with bad half-live with decent mab with great half-life.</p>
+<ul>
+<li>mab1: muIC50 = -3, sd (log10 IC50) = 0.25, resistance = 0%, hl = 7</li>
+<li>mab2: muIC50 = -2, sd (log10 IC50) = 0.5, resistance = 33%, hl = 84</li>
+</ul>
+<p>Here we will want to look at both mean IIP and coverage IIP &gt; 2</p>
+<pre class="r"><code>main_vars = c(&quot;ratio&quot;, &quot;c0&quot;, &quot;muIC50_1&quot;, &quot;muIC50_2&quot;,
+               &quot;hl_1&quot;, &quot;hl_2&quot;, &quot;sigIC50_1&quot;, &quot;sigIC50_2&quot;,
+              &quot;omega_1&quot;, &quot;omega_2&quot;)
+
+#the case study2 notation is an artifact of old two case study analysis
+
+case_study2_full = bispecific_data %&gt;%
+  filter(muIC50_1 == -3 &amp; muIC50_2 == -2 &amp;
+           sigIC50_1 == 0.25 &amp; sigIC50_2 == 0.5 &amp;
+           omega_1 == 1 &amp; omega_2 == 0.67 &amp;
+           hl_1 == 7 &amp; (hl_2 == 7 | hl_2 == 84))
+
+CS2_iip = case_study2_full %&gt;%
+  select(-contains(&quot;coverage&quot;)) %&gt;%
+  gather(key, value, -all_of(main_vars)) %&gt;%
+  separate(key, into = c(&quot;interaction&quot;, &quot;endpoint&quot;, &quot;summary&quot;, &quot;time&quot;), sep = &quot;_&quot;) %&gt;%
+  unite(summary, summary, endpoint, sep = &quot;_&quot;)
+
+
+CS2_coverage = case_study2_full %&gt;%
+  select(all_of(main_vars), contains(&quot;coverage&quot;)) %&gt;%
+  gather(key, value, -all_of(main_vars)) %&gt;%
+  separate(key, 
+           into = c(&quot;interaction&quot;, &quot;endpoint&quot;, &quot;coverage_endpoint&quot;, &quot;summary&quot;, &quot;time&quot;), 
+           sep = &quot;_&quot;) %&gt;%
+  mutate(
+    coverage_level = parse_number(coverage_endpoint),
+    summary = &quot;mean_coverage&quot;
+    ) %&gt;%
+  select(-endpoint, -coverage_endpoint)
+
+# CS = case study
+CS2_data = bind_rows(CS2_iip, CS2_coverage) %&gt;%
+  mutate(summary_label = if_else(
+    summary == &quot;mean_iip&quot;,
+    &quot;Mean IIP&quot;,
+    paste(&quot;% viruses IIP &gt;&quot;, coverage_level)),
+    value = if_else(summary == &quot;mean_iip&quot;, value, 100 * round(value, 2))
+  )
+
+
+#main_vars[-1] should exclude ratio
+CS2_combo = CS2_data %&gt;%
+  filter(c0 != 2400, hl_1 != hl_2) %&gt;%
+  group_by_at(all_of(main_vars[-1])) %&gt;%
+  group_by(interaction, summary_label, summary, time, coverage_level, .add = T) %&gt;%
+  summarize(
+    total_max = length(which(value==max(value))),
+    best_ratio = ratio[which.max(value)],
+    best_value = max(value),
+    `.groups` = &quot;drop&quot;
+  ) %&gt;%
+  mutate(
+    admin = &quot;combination&quot;,
+    )
+  
+CS2_bispecific = CS2_data %&gt;%
+  filter(ratio == 0.5 &amp; hl_1 == hl_2 &amp; c0 &gt; 150) %&gt;%
+  rename(
+    best_ratio = ratio,
+    best_value = value
+  ) %&gt;%
+  mutate(
+    admin = &quot;bi-specific&quot;,
+    c0 = c0/2
+  )
+
+CS2_summary = bind_rows(CS2_combo, CS2_bispecific) %&gt;%
+  ungroup() </code></pre>
+</div>
+<div id="parental-ratio-optimization-and-pk" class="section level2">
+<h2>Parental ratio optimization and PK</h2>
+<div id="pk" class="section level3">
+<h3>PK</h3>
+<pre class="r"><code>CS2_summary %&gt;%
+  filter(c0 %in% c(300, 600) &amp; summary_label %in% c(&quot;IIP &gt; 2&quot;, &quot;Mean IIP&quot;) &amp;
+           admin == &quot;combination&quot;) %&gt;%
+  mutate(c0_1 = best_ratio * c0, c0_2 = (1-best_ratio) * c0) %&gt;%
+  group_by(c0, summary_label, interaction, time, best_ratio) %&gt;%
+  nest() %&gt;%
+  mutate(pk_data = map(data, ~.pk_1cmpt(select(., c0_1, c0_2, hl_1, hl_2), 84))) %&gt;%
+  filter(best_ratio &gt; 0 &amp; best_ratio &lt; 1) %&gt;%
+  rename(timepoint = time) %&gt;%
+  unnest(cols = pk_data) %&gt;%
+  gather(mab, conc, conc_1, conc_2) %&gt;%
+  ggplot(aes(x = time, y = conc, colour = mab, linetype = factor(c0))) +
+  geom_line() +
+  scale_y_log10() +
+  facet_wrap(~best_ratio)</code></pre>
+<div class="figure" style="text-align: center">
+<img src="figure/bispecific.Rmd/parental-pk-1.png" alt="Differences in PK over varying doses." width="672" />
+<p class="caption">
+Differences in PK over varying doses.
+</p>
+</div>
+<pre class="r"><code>bispecific_pk = map_df(c(300, 1200), ~ tibble(
+  time = seq(0, 84, by = 1),
+  c0 = .,
+  conc = . / 3 * exp(-time * log(2) / 7)
+)) 
+
+bispecific_pk %&gt;% 
+  ggplot(aes(x = time, y = conc,  linetype = factor(c0))) +
+  geom_line() +
+  scale_y_log10()</code></pre>
+<div class="figure" style="text-align: center">
+<img src="figure/bispecific.Rmd/bispecific-pk-pl-1.png" alt="bi-specific 1-cmpt PK" width="672" />
+<p class="caption">
+bi-specific 1-cmpt PK
+</p>
+</div>
+</div>
+<div id="optimization-pkpd" class="section level3">
+<h3>Optimization &amp; pkpd</h3>
+<p>Want to compare bi-specific to optimal parent. Look at all doses and summary endpoints to start. Switch between 300 and 1200ug; mean iip</p>
+<pre class="r"><code>CS2_summary %&gt;%
+  filter(admin == &quot;combination&quot;) %&gt;%
+  ggplot(aes(x = interaction, y = best_ratio, shape = time)) +
+  geom_point() +
+  geom_hline(yintercept = 0.5, linetype = &quot;dashed&quot;) +
+  scale_y_continuous(breaks = ratio_breaks, labels = ratio_labels, limits = c(0, 1)) +
+  labs(y = &quot;optimal ratio&quot;) +
+  facet_grid(rows = vars(summary_label), 
+             cols = vars(c0), space = &quot;free&quot;, scales=&quot;free_x&quot;) +
+  theme(legend.box = &quot;vertical&quot;, axis.text.x = element_text(angle = 30, hjust = 1))</code></pre>
+<div class="figure" style="text-align: center">
+<img src="figure/bispecific.Rmd/bestratio-1.png" alt="Optimal ratios for all summaries and interactions with combination administration." width="672" />
+<p class="caption">
+Optimal ratios for all summaries and interactions with combination administration.
+</p>
+</div>
+<pre class="r"><code>CS2_summary %&gt;%
+  filter(admin == &quot;combination&quot; &amp; c0 %in% c(300, 1200) &amp;
+           (summary == &quot;mean_iip&quot; | coverage_level == 2)) %&gt;%
+  ggplot(aes(x = interaction, y = best_ratio, shape = time)) +
+  geom_point() +
+  geom_hline(yintercept = 0.5, linetype = &quot;dashed&quot;) +
+  scale_y_continuous(breaks = ratio_breaks, labels = ratio_labels, limits = c(0, 1)) +
+  labs(y = &quot;optimal ratio&quot;) +
+  facet_grid(rows = vars(summary_label), 
+             cols = vars(c0), space = &quot;free&quot;, scales=&quot;free_x&quot;) +
+  theme(legend.box = &quot;vertical&quot;, axis.text.x = element_text(angle = 30, hjust = 1))</code></pre>
+<div class="figure" style="text-align: center">
+<img src="figure/bispecific.Rmd/bestratio-subset-1.png" alt="Alt. visualization of optimal subset." width="672" />
+<p class="caption">
+Alt. visualization of optimal subset.
+</p>
+</div>
+<pre class="r"><code>CS2_data %&gt;%
+  filter(hl_1 != hl_2 &amp; c0 %in% c(300, 1200) &amp;
+           (summary == &quot;mean_iip&quot; | coverage_level == 2)) %&gt;%
+  ggplot(aes(x = ratio, y = value, colour = factor(c0), linetype = time)) +
+  geom_line() +
+  scale_x_continuous(breaks = ratio_breaks, labels = ratio_labels_x, limits = c(0, 1)) +
+  geom_point(data = subset(CS2_combo, c0 %in% c(300, 1200) &amp;
+           (summary == &quot;mean_iip&quot; | coverage_level == 2)),
+           aes(x = best_ratio, y = best_value)) +
+  facet_grid(rows = vars(summary_label), 
+             cols = vars(interaction),  scales=&quot;free_y&quot;, switch = &quot;y&quot;) +
+  labs(colour = &quot;dose (mg)&quot;, linetype = &quot;&quot;, x = &quot;ratio mAb 1 to total dose&quot;, y= &quot;&quot;) +
+  theme(strip.placement = &quot;outside&quot;, strip.background = element_blank(),
+        panel.spacing.x = unit(1, &quot;lines&quot;),
+        strip.switch.pad.grid = unit(0, &quot;lines&quot;),
+        legend.box = &quot;horizontal&quot;)</code></pre>
+<div class="figure" style="text-align: center">
+<img src="figure/bispecific.Rmd/ratio-sensitivity-1.png" alt="Ratio sensitivity, all outcomes." width="672" />
+<p class="caption">
+Ratio sensitivity, all outcomes.
+</p>
+</div>
+</div>
+</div>
+<div id="comparision-between-bi-specific-and-optimal-no-synergy" class="section level2">
+<h2>Comparision between bi-specific and optimal (no synergy)</h2>
+<p>The PK penalty is evident in the 1:1 comparison, where the bi-specific would dominate by assumption for common PK.</p>
+<pre class="r"><code>balance_comb = CS2_data %&gt;%
+  filter(c0 %in% c(300, 1200) &amp;
+           hl_1 != hl_2 &amp; (is.na(coverage_level) | coverage_level == 2) &amp;
+           ratio == 0.5) %&gt;%
+  mutate(best_value = value, best_ratio = ratio,
+         admin = &quot;1:1 combination&quot;)</code></pre>
+<pre class="r"><code>CS2_summary %&gt;%
+  bind_rows(balance_comb) %&gt;%
+  mutate(
+    admin = if_else(admin == &quot;combination&quot;, &quot;optimal combination&quot;, admin)
+  ) %&gt;%
+  filter(summary == &quot;mean_iip&quot; &amp; c0 %in% c(300, 1200)) %&gt;%
+  dplyr::select(-total_max, -coverage_level) %&gt;%
+  ggplot(aes(x = interaction, y = best_value, colour = admin)) +
+  geom_point(position = position_dodge(width = 0.5)) +
+  #geom_abline() +
+  labs(y = &quot;mean iip&quot;, color = &quot;&quot;) +
+  facet_grid(cols = vars(time), rows = vars(c0), space = &quot;free&quot;, scales=&quot;free_x&quot;)</code></pre>
+<p><img src="figure/bispecific.Rmd/raw-bispecific-performance-iip-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>CS2_summary %&gt;%
+  bind_rows(balance_comb) %&gt;%
+  mutate(
+    admin = if_else(admin == &quot;combination&quot;, &quot;optimal combination&quot;, admin)
+  ) %&gt;%
+  filter(summary == &quot;mean_coverage&quot; &amp; c0 %in% c(300, 1200), coverage_level == 2) %&gt;%
+  dplyr::select(-total_max) %&gt;%
+  ggplot(aes(x = interaction, y = best_value, colour = admin)) +
+  geom_point(position = position_dodge(width = 0.5)) +
+  #geom_abline() +
+  labs(y = &quot;% viruses IIP &gt; 2&quot;, color = &quot;&quot;) +
+  facet_grid(cols = vars(time), rows = vars(c0), space = &quot;free&quot;, scales=&quot;free_x&quot;)</code></pre>
+<p><img src="figure/bispecific.Rmd/raw-bispecific-performance-coverage-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="synergy-analysis" class="section level2">
+<h2>Synergy Analysis</h2>
+<div id="methods" class="section level3">
+<h3>Methods</h3>
+<p>Synergy is defined as an “IC50” boost-factor (<span class="math inline">\(\alpha &gt; 1\)</span>), like an inverse-potency reduction. The neutralization calculations are done as follows using the titer definition, where i = parental arm: <span class="math display">\[\tau_i = \frac{C(t)}{IC50_i}\]</span></p>
+<ul>
+<li><p>Minimum: <span class="math display">\[1 - [1+\alpha*min_i\{\tau_i\}]^{-1}\]</span></p></li>
+<li><p>Maximum: <span class="math display">\[1 - [1+\alpha*max_i\{\tau_i\}]^{-1}\]</span></p></li>
+<li><p>Additivity: <span class="math display">\[1 - [1+\alpha\sum_i{\tau_i}]^{-1}\]</span></p></li>
+<li><p>BH: <span class="math display">\[1 - \prod_i[1+\alpha\tau_i]^{-1}\]</span></p></li>
+</ul>
+<div id="iip" class="section level4">
+<h4>IIP</h4>
+<p>The conversions to IIP then follow nicely:</p>
+<ul>
+<li><p>Minimum: <span class="math display">\[log_{10}[1+\alpha*min_i\{\tau_i\}]\]</span></p></li>
+<li><p>Maximum: <span class="math display">\[log_{10}[1+\alpha*max_i\{\tau_i\}]\]</span></p></li>
+<li><p>Additivity: <span class="math display">\[log_{10}[1+\alpha\sum_i{\tau_i}]\]</span></p></li>
+<li><p>BH: <span class="math display">\[\sum_ilog_{10}[1+\alpha\tau_i]\]</span></p></li>
+</ul>
+</div>
+</div>
+<div id="generate-synergy-profile" class="section level3">
+<h3>Generate synergy profile</h3>
+<pre class="r"><code>bispecific_pd = CS2_bispecific %&gt;% 
+  select(omega_1, omega_2, muIC50_1, muIC50_2, sigIC50_1, sigIC50_2) %&gt;% 
+  distinct()</code></pre>
+<pre class="r"><code>#interaction_function()
+
+viral_iC50s_sims = .sample_IC50s(total_virus_sims = 500, pd_parms = bispecific_pd,
+                              virus_seed = 822960625)
+
+
+
+calc_bispecific_iip = function(conc, viral_ic50s, synergy_levels = c(1, 10, 100, 1000)) {
+  map_df(synergy_levels, function(i) {
+    viral_ic50s %&gt;%
+      mutate(
+        titer_1 = conc / IC50_1,
+        titer_2 = conc / IC50_2,
+        min_titer = pmin(titer_1, titer_2),
+        max_titer = pmax(titer_1, titer_2)
+      ) %&gt;%
+      transmute(
+        synergy_factor = i,
+        maxNeut = log10(1 + max_titer * i),
+        minNeut = log10(1 + min_titer * i),
+        BH = log10(1 + i * titer_1) + log10(1 + i * titer_2),
+        additivity = log10(1 + i * (titer_1 + titer_2))
+      )
+  }) %&gt;%
+    gather(interaction, iip, maxNeut, minNeut, BH, additivity) %&gt;%
+    mutate(coverage = iip &gt; 2) %&gt;%
+          group_by(synergy_factor, interaction) %&gt;%
+          summarize_all(list(mean = mean))
+}
+  
+bispecific_pkpd = bispecific_pk %&gt;%
+  group_by(c0, time) %&gt;%
+  mutate(ID50_dat = map(conc, calc_bispecific_iip, viral_ic50s = viral_iC50s_sims)) %&gt;%
+  unnest(cols = ID50_dat) %&gt;%
+  rename(mean_iip = iip_mean, mean_coverage = coverage_mean)
+
+bispecific_pkpd_summary = bispecific_pkpd %&gt;%
+  arrange(c0, interaction, synergy_factor, time) %&gt;%
+  group_by(c0, interaction, synergy_factor) %&gt;%
+  summarize_at(vars(mean_iip, mean_coverage), list(
+      auc = ~ pracma::trapz(time, .x) / max(time),
+      trough = ~(.x[time == 84])
+  )
+  ) %&gt;%
+  gather(summary, best_value, mean_iip_auc:mean_coverage_trough) %&gt;%
+  separate(summary, into = c(&quot;tmp1&quot;, &quot;tmp2&quot;, &quot;time&quot;)) %&gt;%
+  unite(summary, tmp1, tmp2, sep = &quot;_&quot;) %&gt;%
+  mutate(admin = &quot;bi-specific&quot;, coverage_level = 2) %&gt;%
+  ungroup() %&gt;%
+  mutate(
+    best_value = if_else(summary == &quot;mean_iip&quot;, best_value, 100 * round(best_value, 2)),
+    summary_label = if_else(
+      summary == &quot;mean_iip&quot;,
+      &quot;Mean IIP&quot;,
+      paste(&quot;% viruses IIP &gt;&quot;, coverage_level)
+    )
+  )</code></pre>
+<pre class="r"><code>bispecific_pkpd %&gt;%
+  gather(outcome, value, mean_iip, mean_coverage) %&gt;%
+  ggplot(aes(x = time, y = value, colour = factor(synergy_factor))) +
+  geom_line() +
+  facet_grid(cols = vars(interaction), rows = vars(outcome, c0), scales = &quot;free_y&quot;)</code></pre>
+<p><img src="figure/bispecific.Rmd/bispecific-synergy-pkpd-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="synergy-comparison-results" class="section level3">
+<h3>Synergy comparison results</h3>
+<pre class="r"><code>CS2_combo %&gt;%
+  mutate(synergy_factor = 1) %&gt;%
+  bind_rows(bispecific_pkpd_summary) %&gt;%
+  filter(summary == &quot;mean_iip&quot; &amp; c0 %in% c(300, 1200)) %&gt;%
+  ggplot(aes(x = interaction, y = best_value, colour = factor(admin), shape = factor(synergy_factor))) +
+  geom_point(aes(group = admin), position = position_dodge(width = 0.1), size = 2) +
+  labs(y = &quot;mean iip&quot;, color = &quot;&quot;, shape = &quot;synergy (fold IC50 boost)&quot;) +
+  scale_x_discrete(limits = c(&quot;BH&quot;, &quot;additivity&quot;, &quot;maxNeut&quot;, &quot;minNeut&quot;)) +
+  facet_grid(cols = vars(time), rows = vars(c0), space = &quot;free&quot;, scales=&quot;free_x&quot;)</code></pre>
+<p><img src="figure/bispecific.Rmd/synergy-iip-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>CS2_combo %&gt;%
+  mutate(synergy_factor = 1) %&gt;%
+  bind_rows(bispecific_pkpd_summary) %&gt;%
+  filter(summary == &quot;mean_coverage&quot; &amp; c0 %in% c(300, 1200) &amp; coverage_level == 2) %&gt;%
+  ggplot(aes(x = interaction, y = best_value, colour = factor(admin), 
+             shape = factor(synergy_factor))) +
+  geom_point(aes(group = admin), position = position_dodge(width = 0.1), size = 2) +
+  labs(y = &quot;% viruses IIP &gt; 2&quot;, color = &quot;&quot;, shape = &quot;synergy (fold IC50 boost)&quot;) +
+  scale_x_discrete(limits = c(&quot;BH&quot;, &quot;additivity&quot;, &quot;maxNeut&quot;, &quot;minNeut&quot;)) +
+  facet_grid(cols = vars(time), rows = vars(c0), space = &quot;free&quot;, scales=&quot;free_x&quot;)</code></pre>
+<p><img src="figure/bispecific.Rmd/synergy-coverage-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="paper-figure" class="section level2">
+<h2>Paper figure</h2>
+<p>Combines the parental and synergy analysis.</p>
+<pre class="r"><code>bilab_location = 1.45
+final_ratio_breaks = c(0, 0.5, 1, bilab_location)
+final_ratio_labels = c(&quot;All\nbNAb2&quot;, &quot;1:1&quot;, &quot;All\nbNAb1&quot;, &quot;Bi-\nspecific&quot;)
+
+opt_plot_results = CS2_combo %&gt;%
+  ungroup() %&gt;%
+  dplyr::filter(c0 %in% c(300, 1200) &amp; (summary == &quot;mean_iip&quot; | coverage_level == 2) &amp; 
+                  interaction != &quot;maxNeut&quot;) %&gt;%
+  mutate(
+    ratio = best_ratio,
+    value = best_value,
+    interaction = fct_rev(interaction_labeller(interaction))
+  )
+
+bispecific_plot_res = bispecific_pkpd_summary %&gt;%
+  filter(synergy_factor &lt; 1000 &amp; interaction != &quot;maxNeut&quot;) %&gt;%
+  mutate(
+    ratio = bilab_location,
+    value = best_value,
+    interaction = fct_rev(interaction_labeller(interaction))
+  )
+
+make_comparison_plot = function(time_var){
+  CS2_data %&gt;%
+    filter(
+      hl_1 != hl_2 &amp; c0 %in% c(300, 1200) &amp;
+        (summary == &quot;mean_iip&quot; | coverage_level == 2) &amp;
+        time == time_var &amp; interaction != &quot;maxNeut&quot;
+    ) %&gt;%
+    mutate(interaction = fct_rev(interaction_labeller(interaction))) %&gt;%
+    ggplot(aes(x = ratio, y = value, colour = factor(c0))) +
+    geom_line() +
+    scale_x_continuous(breaks = final_ratio_breaks, labels = final_ratio_labels,
+                       minor_breaks = 0:4/4) +
+    geom_point(data = dplyr::filter(opt_plot_results, time == time_var), 
+               shape = 21, fill = &quot;white&quot;) +
+    geom_point(data = dplyr::filter(bispecific_plot_res, time == time_var),
+                                    aes(shape = factor(synergy_factor)),
+               position = position_dodge(width = 0.25)) +
+    facet_grid(space = &quot;free_x&quot;,
+      rows = vars(summary_label),
+      cols = vars(interaction),
+      scales = &quot;free&quot;,
+      switch = &quot;y&quot;
+    ) +
+    labs(
+      colour = &quot;dose (mg)&quot;,
+      linetype = &quot;&quot;,
+      x = &quot;&quot;,
+      y = time_var,
+      shape = &quot;synergy (fold IC50 boost)&quot;
+    ) +
+    scale_color_viridis_d(option = &quot;D&quot;, end = 0.75) +
+    theme(
+      strip.placement = &quot;outside&quot;,
+      strip.background = element_blank(),
+      panel.spacing.x = unit(1, &quot;lines&quot;),
+      panel.grid.minor.y = element_blank(),
+      panel.grid.minor.x = element_blank(),
+      strip.text.y = element_text(size = 10, margin = margin(0,0,0,0)),
+      strip.text.x = element_text(margin = margin(0,0,0,0)),
+      axis.text.x = element_text(size = 7),
+      strip.switch.pad.grid = unit(0, &quot;lines&quot;),
+      legend.box = &quot;horizontal&quot;,
+      plot.margin = unit(c(0, r = 1, 0, 0), &quot;cm&quot;)
+    )
+}
+
+auc_pl = make_comparison_plot(&quot;auc&quot;) + theme(legend.position = &quot;none&quot;) 
+trough_pl = make_comparison_plot(&quot;trough&quot;)
+
+pl_legend = get_legend(trough_pl +
+                         theme(legend.box = &quot;vertical&quot;, legend.margin = margin(0, 0, 0, 0, &quot;lines&quot;),
+                               legend.box.margin = margin(0, 0, 0, 0, &quot;lines&quot;),
+                               legend.text = element_text(size = 8),
+                               legend.spacing.y = unit(0, &quot;lines&quot;),
+                               legend.title = element_text(size = 8)))
+
+plot_grid(pl_legend,
+          plot_grid(auc_pl, trough_pl + theme(legend.position = &quot;none&quot;), 
+                                    nrow = 2),
+          rel_heights = c(1.25, 12), nrow = 2)</code></pre>
+<p><img src="figure/bispecific.Rmd/paper-plot-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-paper-plot-1">
+Past versions of paper-plot-1.png
+</button>
+</p>
+<div id="fig-paper-plot-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/fc6f2963a8f09b580c22b50949d4d9b372fc0fe8/docs/figure/bispecific.Rmd/paper-plot-1.png" target="_blank">fc6f296</a>
+</td>
+<td>
+Bryan
+</td>
+<td>
+2022-03-15
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.1.0 (2021-05-18)
+Platform: x86_64-apple-darwin17.0 (64-bit)
+Running under: macOS Catalina 10.15.7
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRblas.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] VISCPK_0.8.0      viridis_0.6.1     viridisLite_0.4.0 cowplot_1.1.1    
+ [5] kableExtra_1.3.4  forcats_0.5.1     stringr_1.4.0     dplyr_1.0.7      
+ [9] purrr_0.3.4       readr_1.4.0       tidyr_1.1.3       tibble_3.1.2     
+[13] ggplot2_3.3.5     tidyverse_1.3.1   workflowr_1.7.0  
+
+loaded via a namespace (and not attached):
+ [1] httr_1.4.2        sass_0.4.0        jsonlite_1.7.3    modelr_0.1.8     
+ [5] bslib_0.2.5.1     assertthat_0.2.1  getPass_0.2-2     highr_0.9        
+ [9] cellranger_1.1.0  yaml_2.2.2        pillar_1.6.1      backports_1.2.1  
+[13] glue_1.6.1        digest_0.6.29     promises_1.2.0.1  rvest_1.0.0      
+[17] colorspace_2.0-2  htmltools_0.5.2   httpuv_1.6.1      pkgconfig_2.0.3  
+[21] broom_0.7.8       haven_2.4.1       scales_1.1.1      webshot_0.5.2    
+[25] processx_3.5.2    svglite_2.0.0     whisker_0.4       later_1.2.0      
+[29] pracma_2.3.3      git2r_0.28.0      generics_0.1.0    farver_2.1.0     
+[33] ellipsis_0.3.2    withr_2.4.3       cli_3.1.1         magrittr_2.0.2   
+[37] crayon_1.4.2      readxl_1.3.1      evaluate_0.14     ps_1.6.0         
+[41] fs_1.5.2          fansi_0.5.0       xml2_1.3.2        tools_4.1.0      
+[45] hms_1.1.0         lifecycle_1.0.1   munsell_0.5.0     reprex_2.0.0     
+[49] callr_3.7.0       compiler_4.1.0    jquerylib_0.1.4   systemfonts_1.0.2
+[53] rlang_1.0.1       grid_4.1.0        rstudioapi_0.13   labeling_0.4.2   
+[57] rmarkdown_2.11    gtable_0.3.0      DBI_1.1.1         R6_2.5.1         
+[61] gridExtra_2.3     lubridate_1.7.10  knitr_1.37        fastmap_1.1.0    
+[65] utf8_1.2.1        rprojroot_2.0.2   stringi_1.7.6     Rcpp_1.0.7       
+[69] vctrs_0.3.8       dbplyr_2.1.1      tidyselect_1.1.1  xfun_0.29        </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

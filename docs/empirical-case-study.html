@@ -1,0 +1,3101 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Bryan Mayer" />
+
+<meta name="date" content="2022-01-05" />
+
+<title>Ratio optimization for 3BNC117, 10-1074, theoretical-mutants, and VRC07523-LS</title>
+
+<script src="site_libs/header-attrs-2.11/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/journal.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<script src="site_libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="site_libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">bNAb-PKPD-Optimization</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Analysis Overview</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Data
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/tree/main/data">Raw Data</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/tree/main/output">Results Output</a>
+    </li>
+    <li>
+      <a href="process-sims.html">Simulation Data Processing</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/tree/main/output/sim_results">Simulation Data</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Tables
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/output/empirical-opt/empirical-opt-ratios.csv">Supp. Table 2</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Figures
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/bispecific.Rmd/paper-plot-1.png">Figure 4</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/empirical-case-study.Rmd/empirical-paper-pl-1.png">Figure 5</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/hill-slope-meta.Rmd/hill-slope-pl-1.png">Supp. Figure 1</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/empirical-case-study.Rmd/amp-pegu-dr-1.png">Supp. Figure 3</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/titer-analysis.Rmd/supp-pl-titer-1.png">Supp. Figure 4</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/empirical-case-study.Rmd/empirical-paper-marginal-1.png">Supp. Figure 5</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="https://github.com/bryanmayer/pkpd-bnab-project/">GitHub</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Ratio optimization for 3BNC117, 10-1074, theoretical-mutants, and VRC07523-LS</h1>
+<h4 class="author">Bryan Mayer</h4>
+<h4 class="date">2022-01-05</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2022-03-15
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>pkpd-bnab-project/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version 1.7.0). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20201117code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20201117)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20201117code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20201117)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombryanmayerpkpdbnabprojecttreebf4e271744eb43fc75970b229a913b3e7dcc6e10targetblankbf4e271a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bryanmayer/pkpd-bnab-project/tree/bf4e271744eb43fc75970b229a913b3e7dcc6e10" target="_blank">bf4e271</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcombryanmayerpkpdbnabprojecttreebf4e271744eb43fc75970b229a913b3e7dcc6e10targetblankbf4e271a" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/bryanmayer/pkpd-bnab-project/tree/bf4e271744eb43fc75970b229a913b3e7dcc6e10" target="_blank">bf4e271</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.DS_Store
+    Ignored:    analysis/.Rhistory
+    Ignored:    code/.DS_Store
+    Ignored:    code/python/.DS_Store
+    Ignored:    code/python/.ipynb_checkpoints/
+    Ignored:    code/tmp-compare-old-new.R
+    Ignored:    code/tmp-hill-exploration.R
+    Ignored:    code/tmp-ratio-grid-search.R
+    Ignored:    data/.DS_Store
+    Ignored:    output/.DS_Store
+    Ignored:    output/sim_results/.DS_Store
+    Ignored:    output/sim_results/grid_full_mean2020-11-29.csv
+    Ignored:    output/sim_results/opt_ratio_summary.csv
+    Ignored:    output/sim_results/opt_ratio_wide.csv
+    Ignored:    output/sim_results/optimum_wide.csv
+
+Untracked files:
+    Untracked:  Untitled.R
+    Untracked:  code/python/correlations-optimal.Rmd
+    Untracked:  code/python/correlations.Rmd
+    Untracked:  correlations-optimal.R
+    Untracked:  data/dose10_scrape.csv
+    Untracked:  data/dose30_scrape.csv
+    Untracked:  data/jvi.01909-20-s0001.xlsx
+    Untracked:  output/bispecific_data.rda
+    Untracked:  output/empirical-opt/double-opt-amp.rda
+    Untracked:  output/empirical-opt/double-opt.rda
+    Untracked:  output/empirical-opt/example-empirical-pk-dat.csv
+    Untracked:  output/empirical-opt/triple-opt-amp.rda
+    Untracked:  output/empirical-opt/triple-opt.rda
+    Untracked:  output/processed_catnap_assay.csv
+    Untracked:  output/processed_catnap_assay.rds
+    Untracked:  sim-reproducibility-test.R
+
+Unstaged changes:
+    Modified:   code/publish_all.R
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/empirical-case-study.Rmd</code>) and HTML (<code>docs/empirical-case-study.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/bb4f245140dc99933a9f37f182a944c4e447ba75/analysis/empirical-case-study.Rmd" target="_blank">bb4f245</a>
+</td>
+<td>
+Bryan
+</td>
+<td>
+2022-03-15
+</td>
+<td>
+final version of code
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/929c62ccd49fa48cc23bdbf232709913afe0c1e5/analysis/empirical-case-study.Rmd" target="_blank">929c62c</a>
+</td>
+<td>
+Bryan
+</td>
+<td>
+2022-03-13
+</td>
+<td>
+data documentation
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/41337fd754fb4260de641b08bb6a3b9b4ed400a1/analysis/empirical-case-study.Rmd" target="_blank">41337fd</a>
+</td>
+<td>
+Bryan
+</td>
+<td>
+2022-03-13
+</td>
+<td>
+start of documentation cleanup
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/a3b37fd9beda6f91eca466b77650ae1364427988/analysis/empirical-case-study.Rmd" target="_blank">a3b37fd</a>
+</td>
+<td>
+Bryan
+</td>
+<td>
+2022-01-04
+</td>
+<td>
+method figures for empirical
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/c16f44a7f75309d9d1e52184b402dd4736d762b3/analysis/empirical-case-study.Rmd" target="_blank">c16f44a</a>
+</td>
+<td>
+Bryan
+</td>
+<td>
+2021-12-08
+</td>
+<td>
+updates prior to revision
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/803d29ec7fa1209277b77842fedb6c4fa978f01a/analysis/empirical-case-study.Rmd" target="_blank">803d29e</a>
+</td>
+<td>
+Bryan
+</td>
+<td>
+2021-07-11
+</td>
+<td>
+updated case study for final manuscript
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/300998276d2b2c82c3845a20898b4669692890fe/analysis/empirical-case-study.Rmd" target="_blank">3009982</a>
+</td>
+<td>
+Bryan
+</td>
+<td>
+2021-03-23
+</td>
+<td>
+scripts for december draft of paper
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="overview" class="section level1">
+<h1>Overview</h1>
+<pre class="r"><code>library(tidyverse)
+library(kableExtra)
+library(readxl)
+library(cowplot)
+library(viridis)
+theme_set(theme_bw())
+
+source(&quot;code/empirical-opt-funs.R&quot;)
+source(&quot;code/neutralization-funs.R&quot;)
+
+theme_set(theme_bw() + 
+            theme(legend.position = &quot;top&quot;, legend.key.width = unit(1, &quot;cm&quot;),
+                  panel.grid.minor = element_blank()))
+yaxis_off = theme(axis.title.y = element_blank(),
+                  axis.text.y = element_blank(),
+                  strip.text.y = element_blank()
+)
+
+
+ic50_cutoff = 10
+ic50_breaks = c(10^c(-3:1), ic50_cutoff * 10)
+ic50_labels = c(0.001, 0.01, 0.1, 1, 10, &quot;resistant&quot;)
+
+parental_ratio_lab = &quot;3BNC117:total dose&quot;
+parental_ratio_breaks = 0:4/4
+parental_ratio_labels = c(&quot;Only\n10-1074&quot;, 1:3/4, &quot;Only\n3BNC117&quot;)
+
+ls_ratio_lab = &quot;3BNC117-T:total dose&quot;
+ls_ratio_breaks = 0:4/4
+ls_ratio_labels = c(&quot;Only\n10-1074-T&quot;, 1:3/4, &quot;Only\n3BNC117-T&quot;)
+
+ic50_title = expression(paste(&quot;IC&quot;[50],&quot; (&quot;, mu, &quot;g/mL)&quot;))</code></pre>
+<p>In this case study, we perform ratio optimization on three bnabs, 3BNC117, 10-1074, and VRC07-523LS. We use theoretical LS variants of these antibodies by extending their half-live by 2-fold: 3BNC117-T and 10-1074-T. We optimize specifically using potency reduction dose-response relationships derived from Pegu and AMP studies. The protection is estimates for each bnab and combined using an independence model (ie, Bliss-Hill). For these theoretical trials, we consider a simple design of 600 mg administered subcutaneously with a 3 month follow-up window.</p>
+</div>
+<div id="pk" class="section level1">
+<h1>PK</h1>
+<p>Methods and citations are outlined in the paper.</p>
+<pre class="r"><code>parental_data = read_csv(&quot;data/empirical-pk-data/PK_parental_1074_3bnc.csv&quot;) %&gt;%
+  ungroup() %&gt;%
+  dplyr::select(analyte, parameter, value) %&gt;%
+  dplyr::filter(parameter %in% c(&quot;V1&quot;, &quot;V2&quot;, &quot;Cl&quot;, &quot;Q&quot;)) %&gt;%
+  spread(parameter, value) 
+
+tls_data = parental_data %&gt;%
+  mutate(
+    Cl = Cl/3,
+    analyte = paste0(analyte, &quot;-T&quot;)
+    ) 
+
+vrc07_data = vrc_res &lt;- read_table2(&quot;data/empirical-pk-data/PK_vrc07.txt&quot;) %&gt;%
+  janitor::clean_names() %&gt;%
+  mutate(analyte = &quot;VRC07-523LS&quot;) %&gt;%
+  dplyr::select(analyte, parameter = variability, value = finalestimate)%&gt;%
+  spread(parameter, value) %&gt;%
+  rename(Cl = CL, ka = KA, V1 = V2, V2 = V3)
+
+all_pk = parental_data %&gt;%
+  bind_rows(tls_data) %&gt;%
+  bind_rows(vrc07_data) %&gt;%
+  mutate(F1 = zoo::na.locf(F1), ka = zoo::na.locf(ka)) %&gt;%
+  rowwise() %&gt;%
+  mutate(
+    rate_parms = list(convert_2cmp_pkparms(CL = Cl, Vc = V1, Vp = V2, Q = Q)),
+    HL_elimination = log(2)/rate_parms$beta_parm
+    ) %&gt;%
+  ungroup() 
+
+all_pk %&gt;%
+  dplyr::select(-rate_parms) %&gt;%
+  rename(Vc = V1, Vp = V2, bioavailability = F1, `HL (days)` = HL_elimination) %&gt;%
+  gather(parameter, value, -analyte) %&gt;%
+  spread(analyte, value) %&gt;%
+  mutate(parameter = factor(parameter, 
+                            levels = c(&quot;Vc&quot;, &quot;Cl&quot;, &quot;Q&quot;, &quot;Vp&quot;, &quot;ka&quot;, &quot;bioavailability&quot;, &quot;HL (days)&quot;))
+         ) %&gt;%
+  arrange(parameter) %&gt;%
+  select(parameter, `10-1074`, `3BNC117`, `10-1074-T`, `3BNC117-T`, `VRC07-523LS`) %&gt;%
+  kable(booktabs = T, digits = 2, caption = &quot;This is Supp. Table 1&quot;) %&gt;%
+  kable_styling(full_width = F) </code></pre>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+This is Supp. Table 1
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+parameter
+</th>
+<th style="text-align:right;">
+10-1074
+</th>
+<th style="text-align:right;">
+3BNC117
+</th>
+<th style="text-align:right;">
+10-1074-T
+</th>
+<th style="text-align:right;">
+3BNC117-T
+</th>
+<th style="text-align:right;">
+VRC07-523LS
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Vc
+</td>
+<td style="text-align:right;">
+4.50
+</td>
+<td style="text-align:right;">
+5.02
+</td>
+<td style="text-align:right;">
+4.50
+</td>
+<td style="text-align:right;">
+5.02
+</td>
+<td style="text-align:right;">
+1.89
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cl
+</td>
+<td style="text-align:right;">
+0.26
+</td>
+<td style="text-align:right;">
+0.65
+</td>
+<td style="text-align:right;">
+0.09
+</td>
+<td style="text-align:right;">
+0.22
+</td>
+<td style="text-align:right;">
+0.09
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Q
+</td>
+<td style="text-align:right;">
+0.67
+</td>
+<td style="text-align:right;">
+2.19
+</td>
+<td style="text-align:right;">
+0.67
+</td>
+<td style="text-align:right;">
+2.19
+</td>
+<td style="text-align:right;">
+0.41
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Vp
+</td>
+<td style="text-align:right;">
+3.29
+</td>
+<td style="text-align:right;">
+8.65
+</td>
+<td style="text-align:right;">
+3.29
+</td>
+<td style="text-align:right;">
+8.65
+</td>
+<td style="text-align:right;">
+2.34
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ka
+</td>
+<td style="text-align:right;">
+0.39
+</td>
+<td style="text-align:right;">
+0.39
+</td>
+<td style="text-align:right;">
+0.39
+</td>
+<td style="text-align:right;">
+0.39
+</td>
+<td style="text-align:right;">
+0.39
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+bioavailability
+</td>
+<td style="text-align:right;">
+0.46
+</td>
+<td style="text-align:right;">
+0.46
+</td>
+<td style="text-align:right;">
+0.46
+</td>
+<td style="text-align:right;">
+0.46
+</td>
+<td style="text-align:right;">
+0.46
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+HL (days)
+</td>
+<td style="text-align:right;">
+22.61
+</td>
+<td style="text-align:right;">
+16.46
+</td>
+<td style="text-align:right;">
+64.57
+</td>
+<td style="text-align:right;">
+45.62
+</td>
+<td style="text-align:right;">
+35.76
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>pk_window = seq(0, 84, by = 0.5)
+
+example_pk_dat  = all_pk %&gt;%
+  unnest(cols = rate_parms) %&gt;%
+  mutate(dose = 600) %&gt;%
+  create_pk(pk_window) 
+
+write_csv(example_pk_dat, &quot;output/empirical-opt/example-empirical-pk-dat.csv&quot;)
+
+pk_pl_all = example_pk_dat %&gt;%
+  ggplot(aes(x = time, y = conc, color = analyte)) +
+  geom_line() +
+  labs(y = &quot;Concentration (ug/mL; 600 mg dose)&quot;, x = &quot;days&quot;)
+
+pk_pl_all</code></pre>
+<div class="figure" style="text-align: center">
+<img src="figure/empirical-case-study.Rmd/example-pk-1.png" alt="Population PK for analytes with 600 mg administration." width="672" />
+<p class="caption">
+Population PK for analytes with 600 mg administration.
+</p>
+</div>
+<pre class="r"><code>man_pk_pl = all_pk %&gt;%
+  dplyr::filter(!analyte %in% c(&quot;10-1074&quot;, &quot;3BNC117&quot;)) %&gt;%
+  unnest(cols = rate_parms) %&gt;%
+  mutate(dose = 600) %&gt;%
+  create_pk(pk_window) %&gt;%
+  ggplot(aes(x = time, y = conc, color = analyte)) +
+  geom_line() +
+  labs(y = expression(paste(&quot;concentration (&quot;,mu,&quot;g/mL; 600 mg dose)&quot;)), colour = &quot;&quot;, x = &quot;days&quot;) +
+  theme(legend.direction = &quot;vertical&quot;, legend.position = c(1,1),
+        legend.justification = c(1.05,1.05),      
+        legend.key.height =  unit(0.5, &quot;cm&quot;),
+        legend.margin = margin(t = -10),
+         legend.box.background = element_rect(colour = &quot;black&quot;),
+)
+
+man_pk_pl</code></pre>
+<p><img src="figure/empirical-case-study.Rmd/manuscript-pk-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="pd" class="section level1">
+<h1>PD</h1>
+<div id="catnap-viral-distribution-data" class="section level2">
+<h2>CATNAP viral distribution data</h2>
+<pre class="r"><code># these inform Table 2: the sensitivity analysis parameters 
+catnap_dat_raw = read_rds(&quot;output/processed_catnap_assay.rds&quot;) </code></pre>
+<pre class="r"><code>catnap_dat = catnap_dat_raw %&gt;%
+  subset(Antibody  %in% c(&quot;10-1074&quot;, &quot;3BNC117&quot;, &quot;VRC07-523-LS&quot;)) %&gt;%
+  group_by(Virus, Reference) %&gt;%
+  mutate(
+    total_ab = n(),
+    clean_IC50 = if_else(clean_IC50 &gt;= ic50_cutoff, Inf, clean_IC50),
+    clean_IC50_plot = if_else(clean_IC50 &gt;= ic50_cutoff, ic50_cutoff * 10, clean_IC50)
+  ) %&gt;%
+  filter(total_ab == 3) %&gt;% # makes sure all three antibodies are tested (is this the best way to check this??)
+  select(Virus, Antibody, clean_IC50, clean_IC50_plot, subtype, Reference) %&gt;%
+  ungroup()
+
+# wide for pkpd analysis
+pd_data = catnap_dat %&gt;%
+  dplyr::select(-clean_IC50_plot) %&gt;%
+  pivot_wider(names_from = &quot;Antibody&quot;, values_from = &quot;clean_IC50&quot;)
+
+
+res_pl = catnap_dat %&gt;%
+  group_by(Antibody) %&gt;%
+  summarize(
+    resistant = mean(clean_IC50 &gt;= ic50_cutoff),
+    resistant_frac = paste(n() * resistant, n(), sep = &quot;/&quot;)
+  ) %&gt;% 
+  ggplot(aes(x = Antibody, y = resistant * 100)) +
+  geom_bar(aes(fill = Antibody), stat = &#39;identity&#39;, width = 0.5) +
+  geom_text(aes(label = resistant_frac), vjust = -.2) +
+  scale_y_continuous(expression(paste(&quot;resistance (% IC&quot;[50]&gt;=10,&quot;)&quot;)),
+                     limits = c(0,50), breaks = 0:5*10) +
+  scale_x_discrete(&quot;&quot;, limits = c(&quot;10-1074&quot;,&quot;3BNC117&quot;, &quot;VRC07-523-LS&quot;)) +
+  theme_bw() + theme(
+    axis.title.y = element_text(size = 9),
+    #text = element_text(size = 11),
+    axis.text.x = element_blank(),
+    strip.text = element_text(size = 12),
+    legend.position = &quot;none&quot;,
+    plot.margin = unit(c(0.1, .1, -.5, .1), &quot;lines&quot;)
+  )
+
+ic50_dist = catnap_dat %&gt;%
+  filter(clean_IC50 &lt; ic50_cutoff) %&gt;%
+  ggplot(aes(x = Antibody, y = clean_IC50, colour = Antibody)) +
+  geom_boxplot() +
+  scale_x_discrete(&quot;&quot;, limits = c(&quot;10-1074&quot;,&quot;3BNC117&quot;, &quot;VRC07-523-LS&quot;)) +
+  scale_y_log10(ic50_title,
+                           breaks = head(ic50_breaks,-1), labels =  head(ic50_labels, -1)) +
+    theme_bw() +
+  theme(plot.margin = unit(c(0,0,0.1,0), &quot;lines&quot;), 
+    axis.title.y = element_text(size = 10),
+    axis.text.x = element_text(size = 10),
+    #text = element_text(size = 11),
+    strip.text = element_blank(),
+        legend.position = &quot;none&quot;) 
+
+ic50_pl = cowplot::plot_grid(res_pl, ic50_dist, nrow = 2, align = &quot;v&quot;,
+                   rel_heights = c(1.4,2))
+
+ic50_pl</code></pre>
+<p><img src="figure/empirical-case-study.Rmd/pd-profile-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="titer-vs.-protection-dose-response" class="section level2">
+<h2>Titer vs. protection dose-response</h2>
+<div id="nhp-meta-analysis-pegu-et-al." class="section level3">
+<h3>NHP meta-analysis (Pegu et al.)</h3>
+<pre class="r"><code># there was as warning in predict that seems unrelated to the predictions.
+# Warning messages:
+# 1: In pt(x, df.residual(object)) : NaNs produced
+# 2: In pt(x, df.residual(object)) : NaNs produced
+
+pegu_dat = tibble(
+  titer = c(91, 219, 685),
+  neut = c(0.5, 0.75, 0.95)
+)
+
+empirical_pd_fit = drc::drm(neut ~ titer, data = pegu_dat, 
+                        fct = drc::LL.5(names = c(&quot;slope&quot;, &quot;lower&quot;, &quot;upper&quot;,
+                                                  &quot;inflection&quot;, &quot;asymmetry&quot;),
+                             fixed = c(NA, 0, 1, NA, NA)))
+
+# empirical_4pl_fit = drc::drm(neut ~ titer, data = pegu_dat, 
+#                         fct = drc::LL.4(names = c(&quot;slope&quot;, &quot;lower&quot;, &quot;upper&quot;,
+#                                                   &quot;inflection&quot;),
+#                              fixed = c(NA, 0, 1, NA)))
+
+
+pegu_pl = tibble(
+  titer = 10^seq(-0.1, 4.5, length = 100),
+  invitro = 1 - (1 + titer)^(-1),
+  empirical = predict(empirical_pd_fit, data.frame(titer = titer)),
+  potency =  1 - (1 + titer/91)^(-1)
+) %&gt;%
+  gather(model, neut, invitro, empirical, potency) %&gt;%
+  ggplot(aes(x = titer, y = neut * 100)) +
+  geom_line(aes(colour = model, linetype = model)) +
+  geom_point(data = pegu_dat) +
+  scale_y_continuous(breaks = 0:10 * 10) +
+  labs(y = &quot;empirical protection (%) (Pegu et al.)&quot;, 
+       colour = &quot;&quot;, linetype = &quot;&quot;) +
+  scale_color_manual(breaks = c(&quot;invitro&quot;, &quot;empirical&quot;, &quot;potency&quot;), 
+                     labels = c(&quot;In vitro neutralization&quot;, &quot;5PL&quot;, 
+                                &quot;Potency reduction&quot;),
+                     values = c(&quot;black&quot;, &quot;black&quot;, &quot;gray&quot;)) +
+  scale_linetype_manual(breaks = c(&quot;invitro&quot;, &quot;empirical&quot;, &quot;potency&quot;), 
+                     labels = c(&quot;In vitro neutralization&quot;, &quot;5PL&quot;, 
+                                &quot;Potency reduction&quot;),
+                     values = c(2, 1, 1)) +
+  scale_x_log10(breaks = 10^(0:4), labels = as.character(10^(0:4))) +
+  theme(axis.text.x = element_text(size = 8), 
+        legend.key.width = unit(0.5, &quot;cm&quot;), 
+        legend.key.height =  unit(0.5, &quot;cm&quot;),
+        legend.margin = margin(t = -10,0,0,0),
+        legend.box.background = element_rect(colour = &quot;black&quot;),
+        legend.position = c(1, 0), legend.text = element_text(size = 7),
+        legend.direction = &quot;vertical&quot;, 
+        legend.justification = c(1.01, -.10))
+
+pegu_pl</code></pre>
+<p><img src="figure/empirical-case-study.Rmd/pegu-curve-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="amp-corey-et-al." class="section level3">
+<h3>AMP (Corey et al.)</h3>
+<pre class="r"><code>amp_conc_data = tribble(
+  ~dose_mgkg, ~study, ~n, ~peak, ~midpoint, ~trough,
+  10, 704, 895, 65.7, 23.1, 5.8,
+  30, 704, 894, 212, 55.1, 15.4,
+  10, 703, 642, 88.9, 19.8, 4.7,
+  30, 703, 645, 257.9, 44.7, 8.3
+)
+
+amp_conc_avg =  amp_conc_data %&gt;%
+  mutate(weight = n / sum(n)) %&gt;%
+  summarize(across(c(peak, midpoint, trough), ~sum(. * weight)), .groups = &quot;drop&quot;)
+
+amp_dat_all = read_excel(&quot;data/nejm_fig3a.xlsx&quot;) %&gt;%
+  crossing(time = c(&quot;peak&quot;, &quot;midpoint&quot;, &quot;trough&quot;)) %&gt;%
+  left_join(gather(amp_conc_avg, time, mean_conc, midpoint, peak, trough), by = &quot;time&quot;) %&gt;%
+  mutate(
+    neut = pe/100,
+    id80 = mean_conc/ic80,
+    titer = 4 * id80
+  ) 
+
+amp_dat = dplyr::filter(amp_dat_all, time == &quot;midpoint&quot;)
+
+amp_pd_fit = drc::drm(neut ~ titer, data = amp_dat,
+                        fct = drc::LL.5(names = c(&quot;slope&quot;, &quot;lower&quot;, &quot;upper&quot;,
+                                                  &quot;inflection&quot;, &quot;asymmetry&quot;),
+                             fixed = c(NA, 0, 1, NA, NA)))
+
+# 370
+amp_id50 = drc::ED(amp_pd_fit, 50, display = F)[[1]]
+amp_id95 = drc::ED(amp_pd_fit, 95, display = F)[[1]]
+
+
+amp_pl = tibble(
+  titer = 10^seq(-0.1, 4.5, length = 100),
+  invitro = 1 - (1 + titer)^(-1),
+  empirical = predict(amp_pd_fit, data.frame(titer = titer)),
+  potency =  1 - (1 + titer/370)^(-1)
+) %&gt;%
+  gather(model, neut, invitro, empirical, potency) %&gt;%
+  ggplot(aes(x = titer, y = neut * 100)) +
+  geom_line(aes(colour = model, linetype = model)) +
+  geom_point(data = amp_dat) +
+  scale_y_continuous(breaks = 0:10 * 10) +
+  labs(y = &quot;empirical protection (%) (AMP)&quot;, 
+       colour = &quot;&quot;, linetype = &quot;&quot;) +
+  scale_color_manual(breaks = c(&quot;invitro&quot;, &quot;empirical&quot;, &quot;potency&quot;), 
+                     labels = c(&quot;In vitro neutralization&quot;, &quot;5PL&quot;, 
+                                &quot;Potency reduction&quot;),
+                     values = c(&quot;black&quot;, &quot;black&quot;, &quot;gray&quot;)) +
+  scale_linetype_manual(breaks = c(&quot;invitro&quot;, &quot;empirical&quot;, &quot;potency&quot;), 
+                     labels = c(&quot;In vitro neutralization&quot;, &quot;5PL&quot;, 
+                                &quot;Potency reduction&quot;),
+                     values = c(2, 1, 1)) +
+  scale_x_log10(breaks = 10^(0:4), labels = as.character(10^(0:4))) +
+  theme(axis.text.x = element_text(size = 8), 
+        legend.key.width = unit(0.5, &quot;cm&quot;), 
+        legend.key.height =  unit(0.5, &quot;cm&quot;),
+        legend.margin = margin(t = -10,0,0,0),
+        legend.box.background = element_rect(colour = &quot;black&quot;),
+        legend.position = c(1, 0), legend.text = element_text(size = 7),
+        legend.direction = &quot;vertical&quot;, 
+        legend.justification = c(1.01, -.10))
+
+amp_pl</code></pre>
+<p><img src="figure/empirical-case-study.Rmd/amp-curve-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="protection-estimation" class="section level2">
+<h2>Protection estimation</h2>
+<p>Concentration-based protection estimates represented as IIP.</p>
+<pre class="r"><code>conc_range = 10^(seq(-1, 3, length = 50))
+
+empirical_iip = map_df(conc_range, function(i) {
+  pd_data %&gt;%
+    mutate_if(is.numeric, ~ (-log10(1 - empirical_pd_fun(i / .x, mod5pl = empirical_pd_fit)))) %&gt;%
+    gather(analyte, iip, -subtype, -Reference, -Virus) %&gt;%
+    group_by(analyte) %&gt;%
+    summarize_at(vars(iip), 
+                 list(mean = mean,  median = median,
+                      min = min, max = max, 
+                      lower95 = ~quantile(., .025),
+                      upper95 = ~quantile(., 0.975))
+                 ) %&gt;%
+    mutate(concentration = i,
+           outcome = &quot;Pegu est&quot;)
+}) 
+
+amp_iip = map_df(conc_range, function(i) {
+  pd_data %&gt;%
+    mutate_if(is.numeric, ~ (-log10(1 - empirical_pd_fun(i / .x, mod5pl = amp_pd_fit)))) %&gt;%
+    gather(analyte, iip, -subtype, -Reference, -Virus) %&gt;%
+    group_by(analyte) %&gt;%
+    summarize_at(vars(iip), 
+                 list(mean = mean,  median = median,
+                      min = min, max = max, 
+                      lower95 = ~quantile(., .025),
+                      upper95 = ~quantile(., 0.975))
+                 ) %&gt;%
+    mutate(concentration = i,
+           outcome = &quot;AMP est&quot;)
+}) 
+
+raw_iip = map_df(conc_range, function(i) {
+  pd_data %&gt;%
+    mutate_if(is.numeric, ~ (-log10(1 - titer2neut(i / .x)))) %&gt;%
+    gather(analyte, iip, -subtype, -Reference, -Virus) %&gt;%
+    group_by(analyte) %&gt;%
+    summarize_at(vars(iip), 
+                 list(mean = mean,  median = median,
+                      min = min, max = max, 
+                      lower95 = ~quantile(., .025),
+                      upper95 = ~quantile(., 0.975))
+                 ) %&gt;%
+    mutate(concentration = i,
+           outcome = &quot;in vitro&quot;)
+}) 
+
+
+marginal_iip_pl = empirical_iip %&gt;%
+  bind_rows(raw_iip) %&gt;%
+  bind_rows(amp_iip) %&gt;%
+  ggplot(aes(x = concentration, y = mean, colour = analyte, linetype = outcome)) +
+  geom_hline(yintercept = -log10(1 - c(0.5, 0.95, 0.99)), linetype = &quot;dotted&quot;, size = 0.25) +
+  geom_line() +
+  scale_x_log10(breaks = 10^(-1:3), labels = as.character(10^(-1:3))) +
+  labs(y = &quot;mean iip&quot;, linetype = &quot;&quot;) +
+  scale_linetype_manual(breaks = c(&quot;AMP est&quot;, &quot;Pegu est&quot;, &quot;in vitro&quot;), values = c(1,4,3)) +
+  annotate(&quot;text&quot;, x = 1000, y = -log10(1 - c(0.5, 0.95, 0.99)), 
+           label = c(&quot;50%&quot;, &quot;95%&quot;, &quot;99%&quot;), vjust = 0) +
+  theme(legend.box =  &quot;vertical&quot;)
+
+marginal_iip_pl</code></pre>
+<p><img src="figure/empirical-case-study.Rmd/empirical-dr-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#drc::ED(empirical_pd_fit, .5, type = &quot;absolute&quot;)
+# 91
+#drc::ED(empirical_pd_fit, .95, type = &quot;absolute&quot;)
+# 685
+
+empirical_coverage = map_df(conc_range, function(i) {
+  pd_data %&gt;%
+    mutate_if(is.numeric, ~ (i / .x)) %&gt;% # titer
+    gather(analyte, titer, -subtype, -Reference, -Virus) %&gt;%
+    group_by(analyte) %&gt;%
+    summarize_at(vars(titer), 
+                 list(
+                   neut_50 = ~(mean(.x &gt; 1)),
+                   pegu_50 = ~(mean(.x &gt; 91)),
+                   amp_50 = ~(mean(.x &gt; amp_id50)),
+                   neut_95 = ~(mean(.x &gt; neut2titer(.95))),
+                   pegu_95 = ~(mean(.x &gt; 685)),
+                   amp_95 = ~(mean(.x &gt; amp_id95))
+                   )
+                 ) %&gt;%
+    mutate(concentration = i)
+}) %&gt;%
+  gather(coverage, prop, neut_50:amp_95) %&gt;%
+  separate(coverage, into = c(&quot;outcome&quot;, &quot;level&quot;), sep = &quot;_&quot;) %&gt;%
+  mutate(
+    prot_lab = factor(outcome,
+      levels = c(&quot;neut&quot;, &quot;pegu&quot;, &quot;amp&quot;),
+      labels =  c(&quot;In vitro neutralization&quot;, &quot;In vivo protection (NHP)&quot;, &quot;In vivo protection (AMP)&quot;)
+    ),
+    level_lab = case_when(
+      level == &quot;50&quot; ~ &quot;% viruses &gt; 50%&quot;,
+      level == &quot;95&quot; ~ &quot;% viruses &gt; 95%&quot;
+    )
+  )
+
+marg_cov_pl = empirical_coverage %&gt;%
+  ggplot(aes(x = concentration, y = prop * 100, colour = analyte)) +
+  geom_step() +
+  scale_x_log10(breaks = 10^(-1:3), labels = as.character(10^(-1:3))) +
+  labs(y = &quot;&quot;, x = expression(paste(&quot;concentration (&quot;, mu, &quot;g/mL)&quot;))) +
+  facet_grid(level_lab~prot_lab, switch = &quot;y&quot;) +
+  theme(strip.placement = &quot;outside&quot;, 
+        strip.text.y = element_text(size = 12), strip.background.y = element_blank())
+
+marg_cov_pl</code></pre>
+<p><img src="figure/empirical-case-study.Rmd/empirical-coverage-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="pd-summary-figures" class="section level1">
+<h1>PD summary figures</h1>
+<div id="nhp-meta-analysis-and-amp-dose-response" class="section level2">
+<h2>NHP meta-analysis and AMP dose-response</h2>
+<pre class="r"><code># same warning as before
+
+dr_labels = tibble(
+  breaks = c(&quot;invitro&quot;, &quot;pegu_empirical&quot;, &quot;pegu_potency&quot;, &quot;amp_empirical&quot;, &quot;amp_potency&quot;),
+  labels =  c(&quot;In vitro neutralization&quot;, &quot;NHP 5PL&quot;, bquote(&quot;NHP potency reduction (&quot; *rho*&quot; = 91)&quot;), 
+              &quot;AMP 5PL&quot;, bquote(&quot;AMP potency reduction (&quot; *rho*&quot; = 370)&quot;))
+)
+
+
+amp_pegu_dr = tibble(
+  titer = 10^seq(-0.1, 4.5, length = 100),
+  invitro = 1 - (1 + titer)^(-1),
+  pegu_empirical = predict(empirical_pd_fit, data.frame(titer = titer)),
+  pegu_potency =  1 - (1 + titer/91)^(-1),
+  amp_empirical = predict(amp_pd_fit, data.frame(titer = titer)),
+  amp_potency =  1 - (1 + titer/370)^(-1)
+) %&gt;%
+  gather(model, neut, invitro:amp_potency) %&gt;%
+  ggplot(aes(x = titer, y = neut * 100)) +
+  geom_line(aes(colour = model, linetype = model)) +
+  geom_point(data = pegu_dat, colour = &quot;blue&quot;) +
+  geom_point(data = amp_dat, colour = &quot;red&quot;) +
+  scale_y_continuous(breaks = 0:10 * 10) +
+  labs(y = &quot;empirical protection (%)&quot;, 
+       colour = &quot;&quot;, linetype = &quot;&quot;) +
+  scale_color_manual(breaks = dr_labels$breaks, 
+                     labels = dr_labels$labels,
+                     values = c(&quot;black&quot;, &quot;blue&quot;, alpha(&quot;blue&quot;, 1), &quot;red&quot;, alpha(&quot;red&quot;, 1))
+                     ) +
+  scale_linetype_manual(breaks = dr_labels$breaks, 
+                     labels = dr_labels$labels,
+                     values = c(2, 1, 3, 1, 3)) +
+  scale_x_log10(breaks = 10^(0:4), labels = as.character(10^(0:4))) +
+  theme(axis.text.x = element_text(size = 8), 
+        legend.key.width = unit(0.5, &quot;cm&quot;), 
+        legend.key.height =  unit(0.5, &quot;cm&quot;),
+        legend.margin = margin(t = -10,0,0,0),
+        legend.box.background = element_rect(colour = &quot;black&quot;),
+        legend.position = c(1, 0), legend.text = element_text(size = 7),
+        legend.direction = &quot;vertical&quot;, 
+        legend.justification = c(1.01, -.10))
+
+amp_pegu_dr</code></pre>
+<div class="figure" style="text-align: center">
+<img src="figure/empirical-case-study.Rmd/amp-pegu-dr-1.png" alt="Supp. Fig. 3" width="672" />
+<p class="caption">
+Supp. Fig. 3
+</p>
+</div>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-amp-pegu-dr-1">
+Past versions of amp-pegu-dr-1.png
+</button>
+</p>
+<div id="fig-amp-pegu-dr-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/fc6f2963a8f09b580c22b50949d4d9b372fc0fe8/docs/figure/empirical-case-study.Rmd/amp-pegu-dr-1.png" target="_blank">fc6f296</a>
+</td>
+<td>
+Bryan
+</td>
+<td>
+2022-03-15
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="pd-input-data-for-3-bnabs" class="section level2">
+<h2>PD input data for 3 bnabs</h2>
+<pre class="r"><code>top_row = plot_grid(man_pk_pl, ic50_pl + theme(axis.text.x = element_text()), 
+                    align = &quot;h&quot;, axis = &quot;t&quot;,  nrow = 1,
+                    rel_widths = c(1, 1),
+                    labels = c(&quot;A&quot;, &quot;B&quot;), vjust = 1, hjust = 0)
+
+plot_grid(top_row, marg_cov_pl + theme(legend.position = &quot;none&quot;), labels = c(&quot;&quot;, &quot;C&quot;), 
+          rel_heights = c(1.75, 2), nrow = 2)</code></pre>
+<div class="figure" style="text-align: center">
+<img src="figure/empirical-case-study.Rmd/empirical-paper-marginal-1.png" alt="Supp. Fig. 5" width="720" />
+<p class="caption">
+Supp. Fig. 5
+</p>
+</div>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-empirical-paper-marginal-1">
+Past versions of empirical-paper-marginal-1.png
+</button>
+</p>
+<div id="fig-empirical-paper-marginal-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/fc6f2963a8f09b580c22b50949d4d9b372fc0fe8/docs/figure/empirical-case-study.Rmd/empirical-paper-marginal-1.png" target="_blank">fc6f296</a>
+</td>
+<td>
+Bryan
+</td>
+<td>
+2022-03-15
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div id="ratio-optimizations" class="section level1">
+<h1>Ratio optimizations</h1>
+<p>Use independence model: 1 - prod (1 - x)</p>
+<div id="setup" class="section level2">
+<h2>Setup</h2>
+<pre class="r"><code>models = tibble(
+  model = list(empirical_pd_fit, amp_pd_fit),
+  label = c(&quot;pegu&quot;, &quot;amp&quot;)
+)
+
+dose_ratio_list = seq(0, 1, length = 15)
+total_ratio = length(dose_ratio_list)
+
+full_double_analyte_list = tibble(
+  mab1 = c(dose_ratio_list, dose_ratio_list, rep(0, total_ratio)),
+  mab2 = c(1 - dose_ratio_list, rep(0, total_ratio), 1 - dose_ratio_list),
+  mab_set = c(rep(&quot;10-1074-T:3BNC117-T&quot;, total_ratio),
+              rep(&quot;3BNC117-T:VRC07-523LS&quot;, total_ratio),
+              rep(&quot;10-1074-T:VRC07-523LS&quot;, total_ratio)
+              
+  )
+)
+
+triple_parms = all_pk %&gt;%
+  unnest(cols = rate_parms) %&gt;%
+  dplyr::filter(analyte %in% c(&quot;10-1074-T&quot;, &quot;3BNC117-T&quot;, &quot;VRC07-523LS&quot;))
+
+
+outcome_labels = tibble(
+  levels = c(&quot;coverage_50&quot;, &quot;coverage_95&quot;, &quot;mean_iip&quot;),
+  labels = c(&quot;% viruses protection &gt; 50%&quot;,
+             &quot;% viruses protection &gt; 95%&quot;,
+             &quot;Mean protection IIP&quot;)
+)
+
+outcome_factor = function(pd_outcome) factor(pd_outcome, levels = outcome_labels$levels,
+                                            labels = outcome_labels$labels)</code></pre>
+</div>
+<div id="ratio-search" class="section level2">
+<h2>Ratio search</h2>
+<p>This code looks at PKPD outcomes over fixed bnab ratios.</p>
+<ul>
+<li>For 2-bnab: look over full ratio (0 - 1) for each 2-bnab combination</li>
+<li>For 3-bnab: 1:1:1 and all 2:1:1 variations</li>
+</ul>
+<pre class="r"><code># ratio1 = 3bnc share
+# ratio2 = 10-1074 share 
+# vrc07 is remaining
+
+# we will explicitly look at the boundaries
+#triple_ratio_grid = head(dose_ratio_list, -1)[-1]
+# total_ratios = length(triple_ratio_grid)
+
+# one mab (mab3 is implicit here at 0,0)
+single_analyte_list = tribble(
+  ~mab1, ~mab2,
+  1, 0,
+  0, 1,
+  0, 0
+)
+
+# two mab (mab3 is implicit here)
+# ex. mab1 = dose_ratio_list, mab2 = 0 -&gt; mab3 = 1- dose list
+double_analyte_list = tibble(
+  mab1 = c(0.5, 0.5, 0),
+  mab2 = c(0.5, 0, 0.5)
+)
+
+# triple mab (mab3 is implicit here, similar to above)
+triple_analyte_list = tibble(
+  mab1 = c(0.5, 0.25, 0.25, 1/3),
+  mab2 = c(0.25, 0.5, 0.25, 1/3)
+)
+#all(rowSums(triple_analyte_list) &lt; 1)
+
+triple_ratio_list = single_analyte_list %&gt;%
+  bind_rows(double_analyte_list) %&gt;%
+  bind_rows(triple_analyte_list)</code></pre>
+<div id="bnab-combination-search" class="section level3">
+<h3>2-bnab combination search</h3>
+<p>This code runs over a fine grid and takes some time. This was run once and the output is saved in <code>output/</code> and loaded from there. The search can be re-run by making the flag = T in the following code chunk or deleting the relevant output data.</p>
+<pre class="r"><code># the optimizations are slow so don&#39;t want to run everytime
+opt_2bnab_flag = !file.exists(&quot;output/empirical-opt/double-opt.rda&quot;)  | !file.exists(&quot;output/empirical-opt/double-opt-amp.rda&quot;)</code></pre>
+<p>The AMP analysis was added during paper revisions and the code was not refactored to remove redundancy.</p>
+<pre class="r"><code># this is the Pegu runs
+combo_pkpd_full = map_df(1:nrow(full_double_analyte_list), function(i_row) {
+  
+  i = full_double_analyte_list$mab1[i_row]
+  j = full_double_analyte_list$mab2[i_row]
+  analyte_set = full_double_analyte_list$mab_set[i_row]
+  
+  pk_setup = triple_parms %&gt;%
+    mutate(dose = if_else(
+      analyte == &quot;3BNC117-T&quot;,
+      600 * i,
+      if_else(analyte == &quot;10-1074-T&quot;, 600 * j,
+              600 * (1 - (i + j)))
+    )) %&gt;%
+    check_dose_calc(total_dose = 600)
+  
+  active_mabs = filter(pk_setup, dose &gt; 0)[[&#39;analyte&#39;]]
+  total_active = length(active_mabs)
+  pk_setup %&gt;%
+    create_pk(pk_window) %&gt;%
+    pivot_wider(values_from = conc, names_from = analyte) %&gt;%
+    rename(mab_3bnc = `3BNC117-T`,
+           mab_1074 = `10-1074-T`,
+           mab_vrc07 = `VRC07-523LS`) %&gt;%
+    group_by(time) %&gt;%
+    nest() %&gt;%
+    triple_pd_calc(pd_data, mod5pl = empirical_pd_fit) %&gt;%
+    select(-data,-protection_res) %&gt;%
+    unnest(neut_summary) %&gt;%
+    ungroup() %&gt;%
+    mutate(
+      total_dose = 600,
+      total_active = total_active,
+      analyte_set = analyte_set,
+      active_mabs = paste(active_mabs, collapse = &quot;:&quot;),
+      ratio_3bnc = i,
+      ratio_1074 = j,
+      ratio_vrc = 1 - (i + j)
+    )
+})  %&gt;%
+  mutate(total_active_check = rowSums(cbind(ratio_3bnc &gt; 0, ratio_1074 &gt; 0, ratio_vrc &gt; 0)))
+with(combo_pkpd_full, ftable(active_mabs, analyte_set))
+
+# this is the AMP runs, this is coded redundantly because it meets a paper revision request
+combo_pkpd_amp = map_df(1:nrow(full_double_analyte_list), function(i_row) {
+  
+  i = full_double_analyte_list$mab1[i_row]
+  j = full_double_analyte_list$mab2[i_row]
+  analyte_set = full_double_analyte_list$mab_set[i_row]
+  
+  pk_setup = triple_parms %&gt;%
+    mutate(dose = if_else(
+      analyte == &quot;3BNC117-T&quot;,
+      600 * i,
+      if_else(analyte == &quot;10-1074-T&quot;, 600 * j,
+              600 * (1 - (i + j)))
+    )) %&gt;%
+    check_dose_calc(total_dose = 600)
+  
+  active_mabs = filter(pk_setup, dose &gt; 0)[[&#39;analyte&#39;]]
+  total_active = length(active_mabs)
+  pk_setup %&gt;%
+    create_pk(pk_window) %&gt;%
+    pivot_wider(values_from = conc, names_from = analyte) %&gt;%
+    rename(mab_3bnc = `3BNC117-T`,
+           mab_1074 = `10-1074-T`,
+           mab_vrc07 = `VRC07-523LS`) %&gt;%
+    group_by(time) %&gt;%
+    nest() %&gt;%
+    triple_pd_calc(pd_data, mod5pl = amp_pd_fit) %&gt;%
+    select(-data,-protection_res) %&gt;%
+    unnest(neut_summary) %&gt;%
+    ungroup() %&gt;%
+    mutate(
+      total_dose = 600,
+      total_active = total_active,
+      analyte_set = analyte_set,
+      active_mabs = paste(active_mabs, collapse = &quot;:&quot;),
+      ratio_3bnc = i,
+      ratio_1074 = j,
+      ratio_vrc = 1 - (i + j)
+    )
+})  %&gt;%
+  mutate(total_active_check = rowSums(cbind(ratio_3bnc &gt; 0, ratio_1074 &gt; 0, ratio_vrc &gt; 0)))
+
+
+save(combo_pkpd_full, file = &quot;output/empirical-opt/double-opt.rda&quot;)
+save(combo_pkpd_amp, file = &quot;output/empirical-opt/double-opt-amp.rda&quot;)</code></pre>
+<pre class="r"><code>load(&quot;output/empirical-opt/double-opt.rda&quot;)
+load(&quot;output/empirical-opt/double-opt-amp.rda&quot;)
+
+combo_pkpd_all = mutate(combo_pkpd_full, model = &quot;pegu&quot;) %&gt;%
+  bind_rows(mutate(combo_pkpd_amp, model = &quot;amp&quot;))
+
+# unique(combo_pkpd_full$total_active)
+# unique(combo_pkpd_full$active_mabs)
+# with(combo_pkpd_full, ftable(active_mabs))</code></pre>
+<p>Post-processing of 2-bnab results:</p>
+<pre class="r"><code>full_combo_res = combo_pkpd_all %&gt;%
+  gather(outcome, value, mean_iip, coverage_50, coverage_95) %&gt;%
+  group_by_at(vars(outcome, analyte_set, model, contains(&quot;ratio&quot;))) %&gt;%
+  arrange(time) %&gt;%
+  summarize(
+    max_ratio = max(c(ratio_3bnc, ratio_1074, ratio_vrc)),
+    trough_time = max(time),
+    trough = value[which.max(time)],
+    auc = pracma::trapz(time, value)/trough_time
+    , .groups = &quot;drop&quot;
+  ) %&gt;%
+  gather(endpoint, value, trough, auc) %&gt;%
+  mutate(
+    ratio = if_else(str_split_fixed(analyte_set, &quot;:&quot;, n = 2)[, 2] == &quot;3BNC117-T&quot;,
+                    ratio_3bnc, ratio_vrc),
+    value = if_else(str_detect(outcome, &quot;coverage&quot;), value * 100, value)
+  ) %&gt;%
+  rename(analytes = analyte_set)
+  
+
+full_combo_res %&gt;%
+  dplyr::filter(str_detect(outcome, &quot;coverage&quot;))   %&gt;%
+  ggplot(aes(x = ratio, y = value, colour = outcome, shape = endpoint, linetype = model)) +
+  geom_line() +
+  facet_grid(endpoint ~ analytes)</code></pre>
+<p><img src="figure/empirical-case-study.Rmd/full-combo-ratios-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="bnab-combination-at-fixed-ratios" class="section level3">
+<h3>3-bnab combination at fixed ratios</h3>
+<pre class="r"><code>mab_assign = tibble(
+  remove_mab = 1:3,
+  mabs = c(&quot;3BNC117-T&quot;, &quot;10-1074-T&quot;, &quot;VRC07-523LS&quot;),
+  mabs_pl =  c(&quot;3BNC117-T&quot;, &quot;10-1074-T&quot;, &quot;VRC07\n-523LS&quot;)
+)
+
+triple_pkpd_fixed = map2_df(models$model, models$label, function(mod, mod_lab){
+  
+  map2_df(triple_ratio_list$mab1, triple_ratio_list$mab2, function(i, j) {
+  
+  pk_setup = triple_parms %&gt;%
+    mutate(dose = if_else(
+      analyte == &quot;3BNC117-T&quot;,
+      600 * i,
+      if_else(analyte == &quot;10-1074-T&quot;, 600 * j,
+              600 * (1 - (i + j)))
+    )) %&gt;%
+    check_dose_calc(total_dose = 600)
+  
+  active_mabs = filter(pk_setup, dose &gt; 0)[[&#39;analyte&#39;]]
+  total_active = length(active_mabs)
+  pk_setup %&gt;%
+    create_pk(pk_window) %&gt;%
+    pivot_wider(values_from = conc, names_from = analyte) %&gt;%
+    rename(mab_3bnc = `3BNC117-T`,
+           mab_1074 = `10-1074-T`,
+           mab_vrc07 = `VRC07-523LS`) %&gt;%
+    group_by(time) %&gt;%
+    nest() %&gt;%
+    triple_pd_calc(pd_data, mod5pl = mod) %&gt;%
+    select(-data,-protection_res) %&gt;%
+    unnest(neut_summary) %&gt;%
+    ungroup() %&gt;%
+    mutate(
+      total_dose = 600,
+      total_active = total_active,
+      active_mabs = paste(active_mabs, collapse = &quot;:&quot;),
+      ratio_3bnc = i,
+      ratio_1074 = j,
+      ratio_vrc = 1 - (i + j)
+    )
+}) %&gt;%
+  mutate(
+    total_active_check = rowSums(cbind(ratio_3bnc &gt; 0, ratio_1074 &gt; 0, ratio_vrc &gt; 0)),
+    model = mod_lab
+    )
+})</code></pre>
+<p>Post-processing the fixed 3-bnab ratios.</p>
+<pre class="r"><code>triple_res_fixed = triple_pkpd_fixed %&gt;%
+  filter(total_active == 3) %&gt;%
+  gather(outcome, value, mean_iip, coverage_50, coverage_95) %&gt;%
+  group_by_at(vars(model, outcome, active_mabs, contains(&quot;ratio&quot;))) %&gt;%
+  arrange(time) %&gt;%
+  summarize(
+    min_ratio = min(c(ratio_3bnc, ratio_1074, ratio_vrc)),
+    max_ratio = max(c(ratio_3bnc, ratio_1074, ratio_vrc)),
+    trough_time = max(time),
+    trough = value[which.max(time)],
+    auc = pracma::trapz(time, value)/trough_time,
+    .groups = &quot;drop&quot;
+  ) %&gt;%
+  gather(endpoint, value, trough, auc) %&gt;%
+  mutate(
+    ratio_cat = if_else(min_ratio == 1/3, &quot;1:1:1&quot;, 
+                        paste(ratio_3bnc*4, ratio_1074*4, ratio_vrc*4, sep = &quot;:&quot;)),
+    value = if_else(str_detect(outcome, &quot;coverage&quot;), value * 100, value),
+    outcome2 = outcome_factor(outcome)
+    ) %&gt;%
+  mutate(category = &quot;3BNC117-T:10-1074-T:VRC07-523LS&quot;)
+
+triple_res_fixed %&gt;%
+  dplyr::filter(str_detect(outcome, &quot;coverage&quot;)) %&gt;%
+  ggplot(aes(x = ratio_cat, y = value, colour = endpoint, shape = outcome2)) +
+  geom_point() +
+  facet_grid(model~category)</code></pre>
+<p><img src="figure/empirical-case-study.Rmd/triple-fixed-res-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="single-mab-administration" class="section level3">
+<h3>Single mab administration</h3>
+<p>These results were derived from the triple combination fixed ratio above.</p>
+<pre class="r"><code>marg_res = triple_pkpd_fixed %&gt;%
+  filter(total_active == 1) %&gt;%
+  gather(outcome, value, mean_iip, coverage_50, coverage_95) %&gt;%
+  gather(analyte, ratio, contains(&quot;ratio&quot;)) %&gt;%
+  dplyr::filter(ratio == 1) %&gt;%
+  separate(analyte, into = c(&quot;tmp&quot;, &quot;ratio_cat&quot;)) %&gt;%
+  group_by(outcome, ratio_cat, model) %&gt;%
+  arrange(time) %&gt;%
+  summarize(
+    trough_time = max(time),
+    trough = value[which.max(time)],
+    auc = pracma::trapz(time, value)/trough_time
+    ,.groups = &quot;drop&quot;
+  ) %&gt;%
+  gather(endpoint, value, trough, auc) %&gt;%
+  mutate(
+    ratio_cat = case_when(
+      ratio_cat == &quot;3bnc&quot; ~ mab_assign$mabs_pl[1], 
+      ratio_cat == &quot;1074&quot; ~ mab_assign$mabs_pl[2], 
+      ratio_cat == &quot;vrc&quot; ~ mab_assign$mabs_pl[3]
+      ),
+    value = if_else(str_detect(outcome, &quot;coverage&quot;), value * 100, value),
+    outcome2 = outcome_factor(outcome),
+    category = &quot;Single mAb&quot;
+    )
+
+single_mab_pl = marg_res %&gt;%
+  dplyr::filter(str_detect(outcome, &quot;coverage&quot;)) %&gt;%
+  mutate(endpoint2 = paste(endpoint,&quot;(% viruses)&quot;)) %&gt;%
+  ggplot(aes(x = ratio_cat, y = value, colour = model)) +
+  geom_point(size = 2, aes(group = outcome2, shape = outcome2), position = position_dodge(width = 0.4)) +
+  scale_y_continuous(limits = c(0, 100), breaks = 0:4*25) +
+  labs(x = &quot;&quot;, shape = &quot;&quot;, y = &quot;% of viruses&quot;) +
+  scale_color_discrete(&quot;protection correlate&quot;, breaks = c(&quot;pegu&quot;, &quot;amp&quot;),
+                       labels = c(&quot;NHP (Pegu et al.)&quot;, &quot;AMP (Corey et al.)&quot;)) +
+  scale_shape_manual(&quot;PKPD endpoint&quot;, values = c(16, 1)) +
+  facet_grid(cols = vars(category), rows = vars(endpoint2), scale = &quot;free_x&quot;, space = &quot;free_x&quot;, 
+             switch = &quot;both&quot;) +
+    theme(strip.placement = &quot;outside&quot;, strip.background = element_blank(),
+        legend.direction = &quot;horizontal&quot;, legend.box = &quot;vertical&quot;,
+        legend.spacing.y = unit(-0.75, &quot;lines&quot;), legend.box.margin = margin(b = 5, t = 2),
+        legend.background = element_blank(),
+        axis.text.x = element_text(size = 6), strip.text.y = element_text(size = 8)) +
+  labs(x = &quot;&quot;, y = &quot;&quot;) 
+
+pl_leg = get_legend(single_mab_pl)
+single_mab_pl</code></pre>
+<p><img src="figure/empirical-case-study.Rmd/single-marg-results-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="optimized-ratios" class="section level2">
+<h2>Optimized ratios</h2>
+<p>This code optimizes PKPD outcomes over all potential ratios for both double and triple combinations. As they take some time, this was run once and the output is saved in <code>output/</code> and loaded from there. The optimizations can be re-performed by making the flag = T in the following code chunk or deleting the relevant output data.</p>
+<pre class="r"><code># the optimizations are slow so don&#39;t want to run everytime
+opt_3bnab_flag = !file.exists(&quot;output/empirical-opt/triple-opt.rda&quot;) | !file.exists(&quot;output/empirical-opt/triple-opt-amp.rda&quot;)</code></pre>
+<div id="running-optimizations" class="section level3">
+<h3>Running optimizations</h3>
+<p>The AMP analysis was added during paper revisions and the code was not refactored to remove redundancy.</p>
+<pre class="r"><code>opt_outcomes = crossing(
+  outcomes = c(&quot;coverage_50&quot;, &quot;coverage_95&quot;),
+  endpoints = c(&quot;trough&quot;, &quot;auc&quot;)
+)
+
+# Pegu
+
+combo_opt = map2_df(opt_outcomes$outcomes, opt_outcomes$endpoints, function(out, end){
+  map_df(1:3, function(i){
+    opt = optimize(combo_opt_fun,
+      interval = c(-10, 10),
+      pk_parms = triple_parms,
+      total_dose = 600,
+      pk_window = pk_window,
+      pd_data = pd_data,
+      outcome_var = out,
+      pk_endpoint = end,
+      mod5pl = empirical_pd_fit,
+      remove_mab = i
+    )
+    #browser()
+    opt_ratios = organize_opt_ratios(calc_opt_ratios(opt$minimum), remove_mab = i)
+    
+    tibble(
+      outcome = out,
+      trough_time = max(pk_window),
+      endpoint = end,
+      analytes = paste0(mab_assign$mabs[-i], collapse = &quot;:&quot;),
+      ratio_3bnc = opt_ratios[1],
+      ratio_1074 = opt_ratios[2],
+      ratio_vrc = opt_ratios[3],
+      value = -opt$objective
+    )
+    
+  })
+})
+
+triple_opt = map2_df(opt_outcomes$outcomes, opt_outcomes$endpoints, function(out, end){
+  opt = optim(c(-2.381427, 0.705), combo_opt_fun, 
+              pk_parms = triple_parms, total_dose = 600, pk_window = pk_window,
+              pd_data = pd_data, outcome_var = out, pk_endpoint = end, mod5pl = empirical_pd_fit
+)
+  #browser()
+  opt_ratios = calc_opt_ratios(opt$par)
+  
+  tibble(
+    outcome = out,
+    trough_time = max(pk_window),
+    endpoint = end,
+    ratio_3bnc = opt_ratios[1],
+    ratio_1074 = opt_ratios[2],
+    ratio_vrc = opt_ratios[3],
+    value = -opt$value
+  )
+  
+})
+
+# AMP, structure follows revision edits
+
+combo_opt_amp = map2_df(opt_outcomes$outcomes, opt_outcomes$endpoints, function(out, end){
+  map_df(1:3, function(i){
+    opt = optimize(combo_opt_fun,
+      interval = c(-10, 10),
+      pk_parms = triple_parms,
+      total_dose = 600,
+      pk_window = pk_window,
+      pd_data = pd_data,
+      outcome_var = out,
+      pk_endpoint = end,
+      mod5pl = amp_pd_fit,
+      remove_mab = i
+    )
+    #browser()
+    opt_ratios = organize_opt_ratios(calc_opt_ratios(opt$minimum), remove_mab = i)
+    
+    tibble(
+      outcome = out,
+      trough_time = max(pk_window),
+      endpoint = end,
+      analytes = paste0(mab_assign$mabs[-i], collapse = &quot;:&quot;),
+      ratio_3bnc = opt_ratios[1],
+      ratio_1074 = opt_ratios[2],
+      ratio_vrc = opt_ratios[3],
+      value = -opt$objective
+    )
+    
+  })
+})
+
+triple_opt_amp = map2_df(opt_outcomes$outcomes, opt_outcomes$endpoints, function(out, end){
+  opt = optim(c(-2.381427, 0.705), combo_opt_fun, 
+              pk_parms = triple_parms, total_dose = 600, pk_window = pk_window,
+              pd_data = pd_data, outcome_var = out, pk_endpoint = end,  mod5pl = amp_pd_fit)
+  #browser()
+  opt_ratios = calc_opt_ratios(opt$par)
+  
+  tibble(
+    outcome = out,
+    trough_time = max(pk_window),
+    endpoint = end,
+    ratio_3bnc = opt_ratios[1],
+    ratio_1074 = opt_ratios[2],
+    ratio_vrc = opt_ratios[3],
+    value = -opt$value
+  )
+  
+})
+
+
+save(combo_opt, triple_opt, file = &quot;output/empirical-opt/triple-opt.rda&quot;)
+save(combo_opt_amp, triple_opt_amp, file = &quot;output/empirical-opt/triple-opt-amp.rda&quot;)</code></pre>
+<pre class="r"><code>load(&quot;output/empirical-opt/triple-opt.rda&quot;)
+load(&quot;output/empirical-opt/triple-opt-amp.rda&quot;)
+
+all_triple_opt = triple_opt %&gt;%
+  mutate(model = &quot;pegu&quot;, combo = &quot;3-mab&quot;) %&gt;%
+  bind_rows(mutate(triple_opt_amp, model = &quot;amp&quot;, combo = &quot;3-mab&quot;))
+
+all_opt = all_triple_opt %&gt;%
+  bind_rows(mutate(combo_opt, model = &quot;pegu&quot;, combo = &quot;2-mab&quot;)) %&gt;%
+  bind_rows(mutate(combo_opt_amp, model = &quot;amp&quot;, combo = &quot;2-mab&quot;))
+
+# dual optimal determined from search
+combo_res_best = full_combo_res %&gt;%
+  group_by(analytes, model, outcome, endpoint) %&gt;%
+  summarize(
+    ratio_cat = &quot;optimal&quot;,
+    ratio = ratio[which.max(value)],
+    value = max(value),
+    .groups = &quot;drop&quot;
+    ) %&gt;%
+  mutate(
+    category = if_else(
+      analytes == &quot;10-1074-T:3BNC117-T&quot;,
+      &quot;3BNC117-T:10-1074-T&quot;,
+      analytes
+    )
+  )</code></pre>
+</div>
+<div id="optimal-ratio-results" class="section level3">
+<h3>Optimal ratio results</h3>
+<pre class="r"><code>all_opt %&gt;%
+  dplyr::filter(str_detect(outcome, &quot;coverage&quot;)) %&gt;%
+  dplyr::select(combo, endpoint, outcome, model, everything(), -trough_time, -analytes) %&gt;%
+  mutate(outcome = paste0(str_remove(outcome, &quot;coverage_&quot;), &quot;%&quot;),
+         value = round(value * 100)
+         ) %&gt;%
+  mutate_at(vars(contains(&quot;ratio&quot;)), round, digits = 2) %&gt;%
+  rename(`% viruses` = value) %&gt;%
+  arrange(combo, outcome, endpoint, model) %&gt;%
+  dplyr::select(-combo) %&gt;%
+  write_csv(&quot;output/empirical-opt/empirical-opt-ratios.csv&quot;) %&gt;%
+  kable(caption = &quot;optimal ratios&quot;) %&gt;%
+  kable_styling(full_width = F) %&gt;%
+  pack_rows(&quot;Two mAb&quot;, 1, 24) %&gt;%
+  pack_rows(&quot;Three mAb&quot;, 25, 32)</code></pre>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+optimal ratios
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+endpoint
+</th>
+<th style="text-align:left;">
+outcome
+</th>
+<th style="text-align:left;">
+model
+</th>
+<th style="text-align:right;">
+ratio_3bnc
+</th>
+<th style="text-align:right;">
+ratio_1074
+</th>
+<th style="text-align:right;">
+ratio_vrc
+</th>
+<th style="text-align:right;">
+% viruses
+</th>
+</tr>
+</thead>
+<tbody>
+<tr grouplength="24">
+<td colspan="7" style="border-bottom: 1px solid;">
+<strong>Two mAb</strong>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+auc
+</td>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+amp
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.19
+</td>
+<td style="text-align:right;">
+0.81
+</td>
+<td style="text-align:right;">
+58
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+auc
+</td>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+amp
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+55
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+auc
+</td>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+amp
+</td>
+<td style="text-align:right;">
+0.01
+</td>
+<td style="text-align:right;">
+0.99
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+39
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+auc
+</td>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+pegu
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.20
+</td>
+<td style="text-align:right;">
+0.80
+</td>
+<td style="text-align:right;">
+87
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+auc
+</td>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+pegu
+</td>
+<td style="text-align:right;">
+0.04
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.96
+</td>
+<td style="text-align:right;">
+83
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+auc
+</td>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+pegu
+</td>
+<td style="text-align:right;">
+0.69
+</td>
+<td style="text-align:right;">
+0.31
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+61
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+trough
+</td>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+amp
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.23
+</td>
+<td style="text-align:right;">
+0.77
+</td>
+<td style="text-align:right;">
+40
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+trough
+</td>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+amp
+</td>
+<td style="text-align:right;">
+0.01
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.99
+</td>
+<td style="text-align:right;">
+33
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+trough
+</td>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+amp
+</td>
+<td style="text-align:right;">
+0.01
+</td>
+<td style="text-align:right;">
+0.99
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+34
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+trough
+</td>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+pegu
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.17
+</td>
+<td style="text-align:right;">
+0.83
+</td>
+<td style="text-align:right;">
+78
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+trough
+</td>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+pegu
+</td>
+<td style="text-align:right;">
+0.01
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.99
+</td>
+<td style="text-align:right;">
+71
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+trough
+</td>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+pegu
+</td>
+<td style="text-align:right;">
+0.35
+</td>
+<td style="text-align:right;">
+0.65
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+51
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+auc
+</td>
+<td style="text-align:left;">
+95%
+</td>
+<td style="text-align:left;">
+amp
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.46
+</td>
+<td style="text-align:right;">
+0.54
+</td>
+<td style="text-align:right;">
+24
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+auc
+</td>
+<td style="text-align:left;">
+95%
+</td>
+<td style="text-align:left;">
+amp
+</td>
+<td style="text-align:right;">
+0.01
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.99
+</td>
+<td style="text-align:right;">
+18
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+auc
+</td>
+<td style="text-align:left;">
+95%
+</td>
+<td style="text-align:left;">
+amp
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+19
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+auc
+</td>
+<td style="text-align:left;">
+95%
+</td>
+<td style="text-align:left;">
+pegu
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.26
+</td>
+<td style="text-align:right;">
+0.74
+</td>
+<td style="text-align:right;">
+49
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+auc
+</td>
+<td style="text-align:left;">
+95%
+</td>
+<td style="text-align:left;">
+pegu
+</td>
+<td style="text-align:right;">
+0.03
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.97
+</td>
+<td style="text-align:right;">
+39
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+auc
+</td>
+<td style="text-align:left;">
+95%
+</td>
+<td style="text-align:left;">
+pegu
+</td>
+<td style="text-align:right;">
+0.02
+</td>
+<td style="text-align:right;">
+0.98
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+31
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+trough
+</td>
+<td style="text-align:left;">
+95%
+</td>
+<td style="text-align:left;">
+amp
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.98
+</td>
+<td style="text-align:right;">
+0.02
+</td>
+<td style="text-align:right;">
+15
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+trough
+</td>
+<td style="text-align:left;">
+95%
+</td>
+<td style="text-align:left;">
+amp
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+8
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+trough
+</td>
+<td style="text-align:left;">
+95%
+</td>
+<td style="text-align:left;">
+amp
+</td>
+<td style="text-align:right;">
+0.01
+</td>
+<td style="text-align:right;">
+0.99
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+14
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+trough
+</td>
+<td style="text-align:left;">
+95%
+</td>
+<td style="text-align:left;">
+pegu
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.44
+</td>
+<td style="text-align:right;">
+0.56
+</td>
+<td style="text-align:right;">
+31
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+trough
+</td>
+<td style="text-align:left;">
+95%
+</td>
+<td style="text-align:left;">
+pegu
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+19
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+trough
+</td>
+<td style="text-align:left;">
+95%
+</td>
+<td style="text-align:left;">
+pegu
+</td>
+<td style="text-align:right;">
+0.01
+</td>
+<td style="text-align:right;">
+0.99
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+25
+</td>
+</tr>
+<tr grouplength="8">
+<td colspan="7" style="border-bottom: 1px solid;">
+<strong>Three mAb</strong>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+auc
+</td>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+amp
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.20
+</td>
+<td style="text-align:right;">
+0.80
+</td>
+<td style="text-align:right;">
+58
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+auc
+</td>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+pegu
+</td>
+<td style="text-align:right;">
+0.04
+</td>
+<td style="text-align:right;">
+0.19
+</td>
+<td style="text-align:right;">
+0.77
+</td>
+<td style="text-align:right;">
+88
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+trough
+</td>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+amp
+</td>
+<td style="text-align:right;">
+0.03
+</td>
+<td style="text-align:right;">
+0.24
+</td>
+<td style="text-align:right;">
+0.73
+</td>
+<td style="text-align:right;">
+40
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+trough
+</td>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:left;">
+pegu
+</td>
+<td style="text-align:right;">
+0.07
+</td>
+<td style="text-align:right;">
+0.20
+</td>
+<td style="text-align:right;">
+0.72
+</td>
+<td style="text-align:right;">
+78
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+auc
+</td>
+<td style="text-align:left;">
+95%
+</td>
+<td style="text-align:left;">
+amp
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.46
+</td>
+<td style="text-align:right;">
+0.54
+</td>
+<td style="text-align:right;">
+24
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+auc
+</td>
+<td style="text-align:left;">
+95%
+</td>
+<td style="text-align:left;">
+pegu
+</td>
+<td style="text-align:right;">
+0.01
+</td>
+<td style="text-align:right;">
+0.27
+</td>
+<td style="text-align:right;">
+0.72
+</td>
+<td style="text-align:right;">
+49
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+trough
+</td>
+<td style="text-align:left;">
+95%
+</td>
+<td style="text-align:left;">
+amp
+</td>
+<td style="text-align:right;">
+0.09
+</td>
+<td style="text-align:right;">
+0.71
+</td>
+<td style="text-align:right;">
+0.20
+</td>
+<td style="text-align:right;">
+15
+</td>
+</tr>
+<tr>
+<td style="text-align:left;padding-left: 2em;" indentlevel="1">
+trough
+</td>
+<td style="text-align:left;">
+95%
+</td>
+<td style="text-align:left;">
+pegu
+</td>
+<td style="text-align:right;">
+0.08
+</td>
+<td style="text-align:right;">
+0.33
+</td>
+<td style="text-align:right;">
+0.59
+</td>
+<td style="text-align:right;">
+31
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="optimization-results" class="section level1">
+<h1>Optimization results</h1>
+<div id="bnab-search-vs.-optimization" class="section level2">
+<h2>2-bnab search vs. optimization</h2>
+<pre class="r"><code># combo_res_best created with load of triple opt results using the search results
+
+combo_best_pl = dplyr::filter(combo_res_best, str_detect(outcome, &quot;coverage&quot;)) %&gt;%
+   mutate(analytes2 = str_replace_all(analytes, &quot;:&quot;, &quot;:\n&quot;))
+
+combo_mab_pl = full_combo_res %&gt;%
+  dplyr::filter(str_detect(outcome, &quot;coverage&quot;)) %&gt;%
+  mutate(analytes2 = str_replace_all(analytes, &quot;:&quot;, &quot;:\n&quot;)) %&gt;%
+  ggplot(aes(x = ratio, y = value, colour = model)) +
+  geom_line(aes(linetype = outcome)) + 
+  scale_y_continuous(limits = c(0, 100), breaks = 0:4*25) +
+  geom_point(data = combo_best_pl, aes(x = ratio, shape = outcome), size = 2) +
+  scale_shape_manual(values = c(16, 1)) +
+  facet_grid(cols = vars(analytes2), rows = vars(endpoint), 
+             scale = &quot;free_x&quot;, space = &quot;free_x&quot;, switch = &quot;x&quot;) +
+  scale_x_continuous(breaks = 0.5, labels = &quot;1:1&quot;) +
+  theme(strip.placement = &quot;outside&quot;, strip.background = element_blank(),
+        legend.position = &quot;none&quot;, axis.text.x = element_text(size = 8)) +
+  labs(x = &quot;&quot;, y = &quot;&quot;) 
+
+combo_mab_pl + theme(legend.position = &quot;top&quot;, legend.box = &quot;vertical&quot;)</code></pre>
+<p><img src="figure/empirical-case-study.Rmd/dual-pl-1.png" width="720" style="display: block; margin: auto;" /></p>
+</div>
+<div id="bnab-search-vs.-optimization-1" class="section level2">
+<h2>3-bnab search vs. optimization</h2>
+<pre class="r"><code>triple_res_opt = all_triple_opt %&gt;%
+  mutate(
+    ratio_cat = &quot;optimal&quot;,
+    value = if_else(str_detect(outcome, &quot;coverage&quot;), value * 100, value),
+    outcome2 = outcome_factor(outcome)
+  )%&gt;%
+  mutate(category = &quot;3BNC117-T:10-1074-T:VRC07-523LS&quot;)
+
+# triple_res_fixed created in triple ratio search section
+
+triple_mab_pl = triple_res_opt %&gt;%
+  bind_rows(triple_res_fixed) %&gt;%
+  mutate(category2 = stringi::stri_replace(category, fixed = &quot;:&quot;, &quot;:\n&quot;, mode = &quot;last&quot;)) %&gt;%
+  dplyr::filter(str_detect(outcome, &quot;coverage&quot;)) %&gt;%
+  ggplot(aes(x = ratio_cat, y = value, colour = model)) +
+  geom_point(size = 2.5, aes(shape = outcome, group = outcome), position= position_dodge(width = 0.4)) +
+  scale_shape_manual(&quot;PKPD endpoint&quot;, values = c(16, 1)) +
+  scale_y_continuous(limits = c(0, 100), breaks = 0:4*25) +
+  labs(x = &quot;&quot;, colour = &quot;&quot;, shape = &quot;&quot;, y = &quot;% of viruses&quot;) +
+  facet_grid(cols = vars(category2), rows = vars(endpoint), 
+             scale = &quot;free_x&quot;, space = &quot;free_x&quot;, switch = &quot;x&quot;) +
+  theme(strip.placement = &quot;outside&quot;, strip.background = element_blank(),
+        legend.position = &quot;none&quot;, axis.text.x = element_text(size = 8)) +
+  labs(x = &quot;&quot;) 
+
+triple_mab_pl + theme(legend.position = &quot;top&quot;, legend.box = &quot;vertical&quot;)</code></pre>
+<p><img src="figure/empirical-case-study.Rmd/triple-pl-1.png" width="720" style="display: block; margin: auto;" /></p>
+</div>
+<div id="summary-figures" class="section level2">
+<h2>Summary figures</h2>
+<div id="fixed-vs.-optimal" class="section level3">
+<h3>Fixed vs. optimal</h3>
+<pre class="r"><code># this giant chain is for processing 2-bnab 1:1 ratio, it&#39;s probably too complicated
+
+triple_pkpd_fixed %&gt;%
+  filter(total_active == 2) %&gt;%
+  gather(outcome, value, mean_iip, coverage_50, coverage_95) %&gt;%
+  group_by_at(vars(model, outcome, active_mabs, contains(&quot;ratio&quot;))) %&gt;%
+  arrange(time) %&gt;%
+  summarize(
+    max_ratio = max(c(ratio_3bnc, ratio_1074, ratio_vrc)),
+    trough_time = max(time),
+    trough = value[which.max(time)],
+    auc = pracma::trapz(time, value)/trough_time,
+    .groups = &quot;drop&quot;
+  ) %&gt;%
+  gather(endpoint, value, trough, auc) %&gt;%
+  dplyr::filter(max_ratio == 0.5) %&gt;%
+  mutate(
+    ratio_cat = &quot;1:1&quot;,
+    #ratio_cat = paste0(&quot;1:1\n&quot;, str_replace(active_mabs, &quot;:&quot;, &quot;\n&quot;)),
+    value = if_else(str_detect(outcome, &quot;coverage&quot;), value * 100, value),
+    category = if_else(
+      active_mabs == &quot;10-1074-T:3BNC117-T&quot;,
+      &quot;3BNC117-T:10-1074-T&quot;,
+      active_mabs
+    )
+  ) %&gt;%
+  rename(analytes = active_mabs) %&gt;%
+  mutate(ratio = if_else(
+    str_split_fixed(analytes, &quot;:&quot;, n = 2)[, 2] == &quot;3BNC117-T&quot;,
+    ratio_3bnc,
+    ratio_vrc
+  )) %&gt;%
+  bind_rows(combo_res_best) %&gt;%
+  mutate(category = str_replace(category, &quot;:&quot;, &quot;:\n&quot;),
+         outcome2 = outcome_factor(outcome)) %&gt;% 
+  bind_rows(marg_res) %&gt;%
+  bind_rows(triple_res_fixed) %&gt;%
+  bind_rows(triple_res_opt) %&gt;%
+  dplyr::filter(str_detect(outcome, &quot;coverage&quot;)) %&gt;%
+  mutate(category = fct_relevel(category, &quot;Single mAb&quot;),
+         category = fct_relevel(category, &quot;3BNC117-T:10-1074-T:VRC07-523LS&quot;, after = Inf)) %&gt;%
+  ggplot(aes(x = ratio_cat, y = value, colour = outcome2, shape = endpoint)) +
+  geom_point(size = 2.5) +
+  scale_y_continuous(limits = c(0, 100)) +
+  labs(x = &quot;&quot;, colour = &quot;&quot;, shape = &quot;&quot;, y = &quot;% of viruses&quot;) +
+  facet_grid(cols = vars(category), rows = vars(model), scale = &quot;free_x&quot;, space = &quot;free_x&quot;, switch = &quot;x&quot;) +
+  theme(strip.placement = &quot;outside&quot;, strip.background = element_blank(),
+        legend.direction = &quot;vertical&quot;, axis.text.x = element_text(size = 8))</code></pre>
+<p><img src="figure/empirical-case-study.Rmd/succinct-main-pl-1.png" width="768" style="display: block; margin: auto;" /></p>
+</div>
+<div id="figure-5" class="section level3">
+<h3>Figure 5</h3>
+<pre class="r"><code>combo_pl = plot_grid(single_mab_pl + theme(legend.position = &quot;none&quot;), 
+          combo_mab_pl + yaxis_off, triple_mab_pl + yaxis_off,
+          axis = &quot;tb&quot;,
+          align = &quot;h&quot;, rel_widths = c(0.9, 1.1, 1), nrow = 1)
+
+plot_grid(pl_leg, combo_pl, nrow = 2, rel_heights = c(1,12))</code></pre>
+<p><img src="figure/empirical-case-study.Rmd/empirical-paper-pl-1.png" width="720" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-empirical-paper-pl-1">
+Past versions of empirical-paper-pl-1.png
+</button>
+</p>
+<div id="fig-empirical-paper-pl-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/fc6f2963a8f09b580c22b50949d4d9b372fc0fe8/docs/figure/empirical-case-study.Rmd/empirical-paper-pl-1.png" target="_blank">fc6f296</a>
+</td>
+<td>
+Bryan
+</td>
+<td>
+2022-03-15
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.1.0 (2021-05-18)
+Platform: x86_64-apple-darwin17.0 (64-bit)
+Running under: macOS Catalina 10.15.7
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRblas.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] viridis_0.6.1     viridisLite_0.4.0 cowplot_1.1.1     readxl_1.3.1     
+ [5] kableExtra_1.3.4  forcats_0.5.1     stringr_1.4.0     dplyr_1.0.7      
+ [9] purrr_0.3.4       readr_1.4.0       tidyr_1.1.3       tibble_3.1.2     
+[13] ggplot2_3.3.5     tidyverse_1.3.1   workflowr_1.7.0  
+
+loaded via a namespace (and not attached):
+ [1] fs_1.5.2          lubridate_1.7.10  webshot_0.5.2     httr_1.4.2       
+ [5] rprojroot_2.0.2   tools_4.1.0       backports_1.2.1   bslib_0.2.5.1    
+ [9] utf8_1.2.1        R6_2.5.1          DBI_1.1.1         colorspace_2.0-2 
+[13] withr_2.4.3       tidyselect_1.1.1  gridExtra_2.3     processx_3.5.2   
+[17] curl_4.3.2        compiler_4.1.0    git2r_0.28.0      cli_3.1.1        
+[21] rvest_1.0.0       xml2_1.3.2        sandwich_3.0-1    labeling_0.4.2   
+[25] sass_0.4.0        scales_1.1.1      mvtnorm_1.1-2     callr_3.7.0      
+[29] systemfonts_1.0.2 digest_0.6.29     foreign_0.8-81    rmarkdown_2.11   
+[33] svglite_2.0.0     rio_0.5.27        pkgconfig_2.0.3   htmltools_0.5.2  
+[37] plotrix_3.8-1     dbplyr_2.1.1      fastmap_1.1.0     highr_0.9        
+[41] rlang_1.0.1       rstudioapi_0.13   jquerylib_0.1.4   generics_0.1.0   
+[45] farver_2.1.0      zoo_1.8-9         jsonlite_1.7.3    gtools_3.9.2     
+[49] zip_2.2.0         car_3.0-11        magrittr_2.0.2    Matrix_1.3-3     
+[53] Rcpp_1.0.7        munsell_0.5.0     fansi_0.5.0       abind_1.4-5      
+[57] lifecycle_1.0.1   multcomp_1.4-17   stringi_1.7.6     whisker_0.4      
+[61] yaml_2.2.2        carData_3.0-4     snakecase_0.11.0  MASS_7.3-54      
+[65] grid_4.1.0        promises_1.2.0.1  crayon_1.4.2      lattice_0.20-44  
+[69] splines_4.1.0     haven_2.4.1       hms_1.1.0         knitr_1.37       
+[73] ps_1.6.0          pillar_1.6.1      codetools_0.2-18  reprex_2.0.0     
+[77] glue_1.6.1        drc_3.0-1         evaluate_0.14     getPass_0.2-2    
+[81] data.table_1.14.0 modelr_0.1.8      vctrs_0.3.8       httpuv_1.6.1     
+[85] cellranger_1.1.0  gtable_0.3.0      assertthat_0.2.1  openxlsx_4.2.4   
+[89] xfun_0.29         janitor_2.1.0     broom_0.7.8       pracma_2.3.3     
+[93] later_1.2.0       survival_3.2-13   TH.data_1.0-10    ellipsis_0.3.2   </code></pre>
+</div>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

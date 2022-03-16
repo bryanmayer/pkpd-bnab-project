@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Bryan Mayer" />
+
+<meta name="date" content="2022-03-15" />
+
+<title>PKPD analysis functions</title>
+
+<script src="site_libs/header-attrs-2.11/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/journal.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">bNAb-PKPD-Optimization</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Analysis Overview</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Data
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/tree/main/data">Raw Data</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/tree/main/output">Results Output</a>
+    </li>
+    <li>
+      <a href="process-sims.html">Simulation Data Processing</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/tree/main/output/sim_results">Simulation Data</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Tables
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/output/empirical-opt/empirical-opt-ratios.csv">Supp. Table 2</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Figures
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/bispecific.Rmd/paper-plot-1.png">Figure 4</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/empirical-case-study.Rmd/empirical-paper-pl-1.png">Figure 5</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/hill-slope-meta.Rmd/hill-slope-pl-1.png">Supp. Figure 1</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/empirical-case-study.Rmd/amp-pegu-dr-1.png">Supp. Figure 3</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/titer-analysis.Rmd/supp-pl-titer-1.png">Supp. Figure 4</a>
+    </li>
+    <li>
+      <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/docs/figure/empirical-case-study.Rmd/empirical-paper-marginal-1.png">Supp. Figure 5</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="https://github.com/bryanmayer/pkpd-bnab-project/">GitHub</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">PKPD analysis functions</h1>
+<h4 class="author">Bryan Mayer</h4>
+<h4 class="date">2022-03-15</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2022-03-15
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>pkpd-bnab-project/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version 1.7.0). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20201117code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20201117)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20201117code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20201117)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombryanmayerpkpdbnabprojecttreebf4e271744eb43fc75970b229a913b3e7dcc6e10targetblankbf4e271a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/bryanmayer/pkpd-bnab-project/tree/bf4e271744eb43fc75970b229a913b3e7dcc6e10" target="_blank">bf4e271</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcombryanmayerpkpdbnabprojecttreebf4e271744eb43fc75970b229a913b3e7dcc6e10targetblankbf4e271a" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/bryanmayer/pkpd-bnab-project/tree/bf4e271744eb43fc75970b229a913b3e7dcc6e10" target="_blank">bf4e271</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/.DS_Store
+    Ignored:    analysis/.Rhistory
+    Ignored:    code/.DS_Store
+    Ignored:    code/python/.DS_Store
+    Ignored:    code/python/.ipynb_checkpoints/
+    Ignored:    code/tmp-compare-old-new.R
+    Ignored:    code/tmp-hill-exploration.R
+    Ignored:    code/tmp-ratio-grid-search.R
+    Ignored:    data/.DS_Store
+    Ignored:    output/.DS_Store
+    Ignored:    output/sim_results/.DS_Store
+    Ignored:    output/sim_results/grid_full_mean2020-11-29.csv
+    Ignored:    output/sim_results/opt_ratio_summary.csv
+    Ignored:    output/sim_results/opt_ratio_wide.csv
+    Ignored:    output/sim_results/optimum_wide.csv
+
+Untracked files:
+    Untracked:  Untitled.R
+    Untracked:  code/python/correlations-optimal.Rmd
+    Untracked:  code/python/correlations.Rmd
+    Untracked:  correlations-optimal.R
+    Untracked:  data/dose10_scrape.csv
+    Untracked:  data/dose30_scrape.csv
+    Untracked:  data/jvi.01909-20-s0001.xlsx
+    Untracked:  output/bispecific_data.rda
+    Untracked:  output/empirical-opt/double-opt-amp.rda
+    Untracked:  output/empirical-opt/double-opt.rda
+    Untracked:  output/empirical-opt/example-empirical-pk-dat.csv
+    Untracked:  output/empirical-opt/triple-opt-amp.rda
+    Untracked:  output/empirical-opt/triple-opt.rda
+    Untracked:  output/processed_catnap_assay.csv
+    Untracked:  output/processed_catnap_assay.rds
+    Untracked:  sim-reproducibility-test.R
+
+Unstaged changes:
+    Modified:   code/publish_all.R
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/opt-sims-background.Rmd</code>) and HTML (<code>docs/opt-sims-background.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/bb4f245140dc99933a9f37f182a944c4e447ba75/analysis/opt-sims-background.Rmd" target="_blank">bb4f245</a>
+</td>
+<td>
+Bryan
+</td>
+<td>
+2022-03-15
+</td>
+<td>
+final version of code
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/c3147046e2a366703672f6e7a703577a86feef68/analysis/opt-sims-background.Rmd" target="_blank">c314704</a>
+</td>
+<td>
+Bryan
+</td>
+<td>
+2022-03-13
+</td>
+<td>
+function code with documentation
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="pharmacodynamic-functions-neutralization-funs.r" class="section level2">
+<h2>Pharmacodynamic functions (<code>neutralization-funs.R</code>)</h2>
+<p>This suite of functions performs calculations to convert between titer, neutralization, and IIP; and to perform Bliss-Hill independence calculations.</p>
+<pre class="r"><code>#&#39; Calculate neutralization given experimental titer
+#&#39; @param titer positive value, ratio of concentration of IC50
+#&#39; @return scalar or numerical vector
+titer2neut = function(titer) {1 - 1/(1+titer)}
+
+#&#39; Calculate experimental titer given neutralization
+#&#39; @param neut neutralization between 0 and 1
+#&#39; @return scalar or numerical vector
+neut2titer = function(neut) {neut/(1 - neut)}
+
+#&#39; Calculate IIP given neutralization
+#&#39; @param neut neutralization between 0 and 1
+#&#39; @return scalar or numerical vector
+neut2iip = function(neut) pmin(-log10(1 - neut), -log10(.Machine$double.eps))
+
+
+#&#39; Calculate BH neutralization given two titers
+#&#39;
+#&#39; @param ID50_1 titer bnab1
+#&#39; @param ID50_2 titer bnab1
+#&#39;
+#&#39; @return scalar or numerical vector
+#&#39;
+titer2BH = function(ID50_1, ID50_2) {
+  1 - (1 - titer2neut(ID50_1)) * (1 - titer2neut(ID50_2))
+}
+
+#&#39; Calculate BH experimental titer given two titers
+#&#39;
+#&#39; @param ID50a titer bnab1
+#&#39; @param ID50b titer bnab2
+#&#39; @param NaN_as_NA flag to ignore simulation settings that created boundary conditions for NaNs
+#&#39;
+#&#39; @return scalar or numerical vector
+#&#39;
+calc_BHID50 = function(ID50a, ID50b, NaN_as_NA = F){
+  zeros = which(ID50a &lt; sqrt(.Machine$double.eps) &amp; ID50b &lt; sqrt(.Machine$double.eps))
+  ID50a = pmax(ID50a, sqrt(.Machine$double.eps))
+  ID50b = pmax(ID50b, sqrt(.Machine$double.eps))
+
+  x = (-(ID50a + ID50b) + sqrt((ID50a + ID50b)^2 + 4*ID50b*ID50a))/(2*ID50a*ID50b)
+  if(any(is.nan(x))) {
+    if(!NaN_as_NA) stop(paste(&quot;BH ID50 nAn, input:&quot;, ID50a, ID50b))
+    x[is.nan(x)] &lt;- NA_real_
+  }
+  out = 1/x
+
+  # this handles some cluster issues with high/float values
+  infinites = which(is.infinite(out))
+
+  if(length(infinites &gt; 0)) out[infinites] = pmax(ID50a, ID50b)[infinites]
+  if(length(zeros &gt; 0)) out[zeros] = 0
+
+  out
+
+}
+
+#&#39; A convoluted way to do a labeller function, would remove if code was refactored
+#&#39; @param interaction_var a variable vector that looks like levels below
+#&#39;
+interaction_labeller = function(interaction_var){
+  factor(interaction_var,
+         labels = c(&quot;Min. Neut.&quot;, &quot;Max. Neut.&quot;, &quot;Additivity&quot;, &quot;Bliss-Hill&quot;),
+         levels = c(&quot;minNeut&quot;, &quot;maxNeut&quot;, &quot;additivity&quot;, &quot;BH&quot;)
+  )
+}</code></pre>
+</div>
+<div id="cmpt-ratio-optimization-functions-onecmptpkpd-sims.r" class="section level2">
+<h2>1-cmpt ratio optimization functions (<code>onecmptPKPD-sims.R</code>)</h2>
+<p>This suite of functions performs PKPD simulations for varying PK/PD inputs sampling viruses accordingly assuming a 1-cmpt PK model. These functions were written to have generalized utility. Functions from here were also used for the <a href="https://github.com/bryanmayer/pkpd-bnab-project/blob/main/code/simulation-batch.R">simulation study</a> and the bi-specific synergy simulations.</p>
+<pre class="r"><code># This must be loaded with neutralization-funs.R
+
+#&#39; Main function: summarize PKPD of two bnabs with given PK and either given PD or simulated
+#&#39;
+#&#39; @param pk_parms pk_input = tibble(c0_1, c0_2, hl_1, hl_2, optional: V_1, V_2)
+#&#39; @param pd_parms pd_input = tibble(omega_1, muIC50_1, sigIC50_1, omega_2, muIC50_2, sigIC50_2)
+#&#39; @param final_time final time of simulation
+#&#39; @param virus_seed simulation seed for reproducibility
+#&#39; @param total_virus_sims total sims
+#&#39; @param IC50s this will skip virus sampling if raw data is provided
+#&#39; @param time_res time grid
+#&#39; @param return_PK flag to return PK once it is generated
+#&#39; @param return_pkpd flag to return PKPD over time data
+#&#39;
+#&#39; @return tibble of summarized PKPD using both auc and trough wide by interaction and pkpd outcomes
+#&#39;
+summarize_2mab1cmpt_PKPD = function(pk_parms,
+                                    pd_parms = tibble(),
+                                    final_time,
+                                    virus_seed = as.numeric(Sys.time()),
+                                    total_virus_sims = 1000,
+                                    IC50s = tibble(),
+                                    time_res = 0.1,
+                                    return_PK = F,
+                                    return_pkpd = F){
+
+  assertthat::assert_that(
+    all(map_lgl(list(pk_parms, pd_parms, IC50s), is.data.frame))
+    , msg = &quot;all input sets must be data.frame or tibbles&quot;)
+
+  # PD setup
+  if(nrow(IC50s) == 0){
+    virus_sims = .sample_IC50s(total_virus_sims = total_virus_sims, pd_parms = pd_parms, virus_seed = virus_seed)
+  } else{
+    assertthat::assert_that(all(c(&quot;IC50_1&quot;, &quot;IC50_2&quot;) %in% names(IC50s))
+                            ,msg = &quot;IC50s should be wide with IC50_1 and IC50_2&quot;)
+
+    virus_sims = IC50s
+  }
+
+  # simulate PK data
+  pk_data = .pk_1cmpt(pk_parms, final_time, time_res = time_res)
+  if(return_PK) return(pk_data)
+
+  pk_summary = pk_data %&gt;% summarize_at(c(&quot;conc_1&quot;, &quot;conc_2&quot;),
+                                        list(
+                                          auc = ~ pracma::trapz(time, .x) / max(time),
+                                          trough = ~(.x[trough])
+                                        ))
+
+  pkpd_dat = pk_data %&gt;%
+    group_by(time, trough) %&gt;%
+    nest() %&gt;%
+    mutate(
+      ID50_dat = map(data, ~ (
+        tibble(
+          ID50_1 = .x$conc_1 / virus_sims$IC50_1,
+          ID50_2 = .x$conc_2 / virus_sims$IC50_2
+        )
+      )),
+      neut_res = map(ID50_dat, .generate_interactions),
+      neut_summary = map(neut_res, summarize_all, list(mean = mean, median = median))
+    )
+
+  if (return_pkpd)
+    return(pkpd_dat %&gt;%
+             select(-data) %&gt;%
+             mutate(virus_seed = virus_seed) %&gt;%
+             add_column(!!! pk_summary)
+           )
+
+  pkpd_dat %&gt;%
+    select(-data, -ID50_dat, -neut_res) %&gt;%
+    unnest(neut_summary) %&gt;%
+    ungroup() %&gt;%
+    summarize_at(vars(-time, -trough), list(
+      auc = ~ pracma::trapz(time, .x) / max(time),
+      trough = ~(.x[trough])
+    )) %&gt;%
+    mutate(
+      virus_seed = virus_seed,
+      total_virus_sims = total_virus_sims
+    ) %&gt;%
+    add_column(!!! pk_summary)
+
+}
+
+#&#39; Backend function to simulate viral population
+#&#39;
+#&#39; @param total_virus_sims # total viral population
+#&#39; @param pd_parms tibble(omega_1, muIC50_1, sigIC50_1, omega_2, muIC50_2, sigIC50_2)
+#&#39; @param virus_seed sampling seed for reproducibility
+#&#39;
+#&#39; @return tibble of IC50s wide by bnab
+#&#39;
+.sample_IC50s = function(total_virus_sims, pd_parms, virus_seed = as.numeric(Sys.time())){
+  set.seed(virus_seed)
+  with(pd_parms, tibble(
+    IC50_1 = (1/rbinom(total_virus_sims, size = 1, prob = omega_1)) *
+      10^(rnorm(total_virus_sims, muIC50_1, sigIC50_1)),
+    IC50_2 = (1/rbinom(total_virus_sims, size = 1, prob = omega_2)) *
+      10^(rnorm(total_virus_sims, muIC50_2, sigIC50_2))
+  ))
+
+}
+
+#&#39; Backend function to get 1-cmpt PK
+#&#39; hl = log(2)/k
+#&#39;
+#&#39; @param pk_parms pk_input = tibble(c0_1, c0_2, hl_1, hl_2, optional: V_1, V_2)
+#&#39; @param final_time end of PK curve
+#&#39; @param V Volume of distribution, default 3
+#&#39; @param time_res granularity of time grid
+#&#39; @param start_time #time grid start
+#&#39;
+#&#39; @return tibble of concentrations over time wide by bnab
+#&#39;
+.pk_1cmpt = function(pk_parms, final_time, V = 3, time_res = 0.1, start_time = 0){
+  assertthat::assert_that(
+    all(flatten_chr(map(c(&quot;c0&quot;, &quot;hl&quot;), ~paste(., 1:2, sep =&quot;_&quot;))) %in%
+          names(pk_parms))
+    , msg = &quot;pk_parms missing required variables&quot;)
+
+  # PK simulations
+  if(any(!c(&quot;V_1&quot;, &quot;V_2&quot;) %in% names(pk_parms))){
+    pk_parms$V_1 = V
+    pk_parms$V_2 = V
+  }
+
+  pk_data = pk_parms  %&gt;%
+    gather(parm, value) %&gt;%
+    separate(parm, into = c(&quot;parm&quot;, &quot;mab&quot;), sep = &quot;_&quot;, fill = &quot;right&quot;) %&gt;%
+    filter(!is.na(mab)) %&gt;%
+    pivot_wider(names_from = parm, values_from =  value) %&gt;%
+    group_by(mab) %&gt;%
+    nest() %&gt;%
+    mutate(
+      pk = map(data, ~tibble(
+        time = seq(start_time, final_time, by = time_res),
+        conc = .x$c0/.x$V * exp(- time* log(2)/.x$hl)
+      ))
+    ) %&gt;%
+    select(-data) %&gt;%
+    unnest(pk)  %&gt;%
+    pivot_wider(names_from = mab, values_from = conc, names_prefix = &quot;conc_&quot;) %&gt;%
+    mutate(trough = time == max(time))
+
+  if(nrow(subset(pk_data, trough)) != 1) stop(&quot;issue with trough time assignment&quot;)
+  if(any(is.na(pk_data))) stop(&quot;pk transpose issue&quot;)
+  pk_data
+
+}
+
+#&#39; Backend helper function to implementing interaction models and PKPD outcomes
+#&#39; This function calculates all of the combination PKPD results
+#&#39;
+#&#39; @param dat tibble(ID50_1, ID50_2), created by summarize function above
+#&#39;
+#&#39; @return wide titer in -&gt; every outcome by interaction model
+#&#39;
+.generate_interactions = function(dat) {
+  dat %&gt;%
+    mutate(
+      min_ID50 = pmin(ID50_1, ID50_2),
+      minNeut = pmin(titer2neut(ID50_1), titer2neut(ID50_2)),
+      max_ID50 = pmax(ID50_1, ID50_2),
+      maxNeut = pmax(titer2neut(ID50_1), titer2neut(ID50_2)),
+      add_ID50 = ID50_1 + ID50_2,
+      additivity = 1 - 1 / (1 + (ID50_1 + ID50_2)),
+      BH_ID50 = calc_BHID50(ID50_1, ID50_2),
+      BH = 1 - (1 - titer2neut(ID50_1)) * (1 - titer2neut(ID50_2))
+    ) %&gt;%
+    select(-ID50_1, -ID50_2) %&gt;%
+    mutate_at(vars(contains(&quot;ID50&quot;)), list(
+      log10 = function(x)
+        pmax(log10(x), -5)
+    )) %&gt;%
+    rename_at( vars( contains( &quot;_log10&quot;) ), list( ~ str_replace(., &quot;_log10&quot;, &quot;log10&quot;)) ) %&gt;%
+    mutate_at(vars(BH, additivity, maxNeut, minNeut), list(neut = identity, iip = neut2iip)) %&gt;%
+    select(-BH, -additivity, -maxNeut, -minNeut) %&gt;%
+    mutate_at(c(&quot;min_ID50&quot;, &quot;max_ID50&quot;, &quot;add_ID50&quot;, &quot;BH_ID50&quot;), list(
+      coverage1 = ~(.x &gt; 1),
+      coverage10 = ~(.x &gt; 10),
+      coverage100 = ~(.x &gt; 100),
+      coverage1000 = ~(.x &gt; 1e3),
+      coverage1e4 = ~(.x &gt; 1e4)
+    )) %&gt;%
+    mutate_at(vars(contains(&quot;iip&quot;)), list(
+      coverage1 = ~(.x &gt; 1),
+      coverage2 = ~(.x &gt; 2),
+      coverage3 = ~(.x &gt; 3),
+      coverage4 = ~(.x &gt; 4)
+    )) %&gt;%
+    mutate_at(vars(contains(&quot;coverage&quot;)), as.numeric)
+}
+
+#&#39; Wrapper to perform ratio optimization by looping over summarize_2mab1cmpt_PKPD
+#&#39;
+#&#39; @param pk_parms_input pk_input = tibble(c0, hl_1, hl_2, optional: V_1, V_2)
+#&#39; @param pd_parms pd_input = tibble(omega_1, muIC50_1, sigIC50_1, omega_2, muIC50_2, sigIC50_2)
+#&#39; @param virus_seed simulation seed for reproducibility
+#&#39; @param total_virus_sims total sims
+#&#39; @param trough_time final time for simulations
+#&#39; @param ratio_grid grid for ratio optimization
+#&#39;
+#&#39; @return stacked tibbles returned from summarize_2mab1cmpt_PKPD, long over ratio
+#&#39;
+ratio_grid_sims = function(pk_parms_input, pd_parms, virus_seed, total_virus_sims,
+                           trough_time, ratio_grid = seq(0, 1, by = 0.01)){
+
+
+  map_df(ratio_grid, function(ratio){
+    pk_parms = pk_parms_input %&gt;%
+      mutate(
+        ratio = ratio,
+        c0_1 = ratio * c0, c0_2 = (1 - ratio) * c0
+      )
+
+    summarize_2mab1cmpt_PKPD(
+      pk_parms = pk_parms,
+      pd_parms = pd_parms,
+      final_time = trough_time,
+      total_virus_sims = total_virus_sims,
+      virus_seed = virus_seed,
+      time_res = 1
+    ) %&gt;%
+      mutate(ratio = ratio)
+
+  })
+
+}</code></pre>
+<div id="processing-1-cmpt-theoretical-results---see-here" class="section level3">
+<h3>Processing 1-cmpt theoretical results - <a href="process-sims.html">See here</a></h3>
+</div>
+</div>
+<div id="bnab-case-study-ratio-optimization-functions-empirical-opt-funs.r" class="section level2">
+<h2>3-bnab case study ratio optimization functions (<code>empirical-opt-funs.R</code>)</h2>
+<p>These functions follow similar structure to 1-cmpt but were specifically curated for this 3-bnab case study. They expect labels for 3BNC117, 10-1074, and VRC07-523LS; perform 2-cmpt PK simulations; and utilize titer-protection dose-response 5PL model relationships fit as drc objects.</p>
+<pre class="r"><code># ----- These are PD functions are highly specific to this project --------
+#&#39; Calculate neutralization from drc model and titer
+#&#39; @param titer titer input
+#&#39; @param mod5pl drc model object
+#&#39;
+#&#39; @return scalar
+empirical_pd_fun = function(titer, mod5pl) {
+  unname(suppressWarnings({drc::PR(mod5pl, titer)}))
+}
+
+#&#39; Calculate BH neutralization from drc model and two titers
+#&#39; @param titer1 titer input, bnab 1
+#&#39; @param titer2 titer input, bnab 2
+#&#39; @param mod5pl drc model object
+#&#39;
+#&#39; @return scalar
+emp_prot_combo2 = function(titer1, titer2, mod5pl) {
+  1 - (1 - empirical_pd_fun(titer1, mod5pl = mod5pl)) * (1 - empirical_pd_fun(titer2, mod5pl = mod5pl))
+}
+
+#&#39; Calculate BH neutralization from drc model and three titers
+#&#39; @param titer1 titer input, bnab 1
+#&#39; @param titer2 titer input, bnab 2
+#&#39; @param titer3 titer input, bnab 3
+#&#39; @param mod5pl drc model object
+#&#39;
+#&#39; @return scalar
+emp_prot_combo3 = function(titer1, titer2, titer3, mod5pl) {
+  1 - (1 - empirical_pd_fun(titer1, mod5pl = mod5pl)) *
+    (1 - empirical_pd_fun(titer2, mod5pl = mod5pl)) *
+    (1 - empirical_pd_fun(titer3, mod5pl = mod5pl))
+}
+
+
+#&#39; Error catching function checking numerical issues
+check_dose_calc = function(dat, total_dose = 600){
+  if(abs(sum(dat$dose) - total_dose) &gt; 1e-3) browser()
+  if(any(dat$dose &lt; 0)) browser()
+
+  dat
+}
+
+#&#39; Convert 2-cmpt PK parms to bi-exponential parms
+#&#39;
+#&#39; @param CL
+#&#39; @param Vc
+#&#39; @param Q
+#&#39; @param Vp
+#&#39;
+#&#39; @return data.frame(A, B, alpha_parm, beta_parm)
+convert_2cmp_pkparms = function (CL, Vc, Q, Vp){
+  k_sum = Q / Vc + Q / Vp + CL / Vc
+  beta_parm = 0.5 * (k_sum - sqrt(k_sum ^ 2 - 4 * Q * CL / (Vp *
+                                                              Vc)))
+  alpha_parm = Q * CL / (beta_parm * Vp * Vc)
+  A = 1 / Vc * (alpha_parm - Q / Vp) / (alpha_parm - beta_parm)
+  B = 1 / Vc * (beta_parm - Q / Vp) / (beta_parm - alpha_parm)
+  data.frame(A, B, alpha_parm, beta_parm)
+}
+
+# ----------- PK functions ------------
+#&#39; 2-cmpt absorption PK model
+#&#39;
+#&#39; @param mtime PK time
+#&#39; @param parms data.frame(A, B, alpha_parm, beta_parm)
+#&#39; @param ka absorption rate
+#&#39; @param dose input dose
+#&#39; @param bioavail biovailability
+#&#39; @param llod lower limit
+#&#39;
+#&#39; @return vector of concentration matching input times
+absorp_2comp = function (mtime, parms, ka, dose, bioavail = 1, llod = 0) {
+
+  out_sort_index = rank(mtime)
+  mtime = sort(mtime)
+  model_parms = parms
+
+  A = model_parms$A
+  B = model_parms$B
+  alpha_parm = model_parms$alpha_parm
+  beta_parm = model_parms$beta_parm
+
+  if (bioavail &gt; 1)
+    warning(&quot;Bioavailability fraction &gt; 1.&quot;)
+  pmax(.absorption_single_2comp(mtime, A = A, B = B, alpha_parm = alpha_parm,
+                                beta_parm = beta_parm, ka = ka, bioavail = bioavail,
+                                dose = dose), llod)[out_sort_index]
+}
+
+
+#&#39; Backend function for absorp_2comp
+.absorption_single_2comp = function (mtime, A, B, alpha_parm, beta_parm, ka, bioavail, dose) {
+  Aabs = A * (ka/(ka - alpha_parm))
+  Babs = B * (ka/(ka - beta_parm))
+  dose * bioavail * (Aabs * exp(-alpha_parm * mtime) + Babs *
+                       exp(-beta_parm * mtime) - (Aabs + Babs) * exp(-ka * mtime))
+}
+
+
+#&#39; 2-cmpt PK over multiple analyte PK parms (stacks absorp_2comp calls)
+#&#39;
+#&#39; @param pk_parms tibble(analyte, A, B, alpha_parm, beta_parm, ka, F1) each row is different mab (analyte)
+#&#39; @param time_grid vector of time
+#&#39;
+#&#39; @return tibble of PK concentration curves, long by analyte
+create_pk = function(pk_parms, time_grid){
+  pk_parms %&gt;%
+    rowwise() %&gt;%
+    mutate(pk_sim = list(tibble(
+      time = time_grid,
+      conc = absorp_2comp(
+        time_grid,
+        dose = dose,
+        ka = ka,
+        bioavail = F1,
+        parms = tibble(
+          A = A,
+          B = B,
+          alpha_parm = alpha_parm,
+          beta_parm = beta_parm
+        )
+      )
+    ))) %&gt;%
+    unnest(cols = pk_sim) %&gt;%
+    dplyr::select(analyte, time, conc)
+}
+
+# ----------- PD functions ------------
+#
+# same for pd_data, wide IC50s for each of these mabs
+
+#&#39; Summarized triple combination PKPD under empirical PD assumptions of the case study
+#&#39;
+#&#39; @param nested_pk very specific input, nested_pk$data = nested wide pk data with specific columns
+#&#39; @param pd_data wide IC50 data. columns names are 3BNC117, 10-1074, VRC07-523-LS
+#&#39; @param mod5pl drc model object
+#&#39;
+#&#39; @return mean outcomes across viruses (IC50s) over time
+triple_pd_calc = function(nested_pk, pd_data, mod5pl) {
+  nested_pk %&gt;%
+    mutate(
+      protection_res = map(data, ~ (tibble(
+        protection = emp_prot_combo3(
+          .x$mab_3bnc / pd_data$`3BNC117`,
+          .x$mab_1074 / pd_data$`10-1074`,
+          .x$mab_vrc07 / pd_data$`VRC07-523-LS`,
+          mod5pl = mod5pl
+        )
+      ))),
+      neut_summary = map(
+        protection_res,
+        summarize_all,
+        list(
+          mean_iip = ~ (mean(-log10(1 - .x))),
+          coverage_50 = ~ mean(. &gt; 0.5),
+          coverage_95  = ~ mean(. &gt; .95)
+        )
+      )
+    )
+}
+
+#---------- opt functions ----------
+
+#&#39; this is a logistic partitioner
+#&#39;
+#&#39; @param par_input vector of numbers, n for n+1 analytes
+#&#39;
+#&#39;  for n ratios, we need n - 1 partitions: this takes an n - 1 vector of reals and returns n ratios summing to 1
+#&#39;  first mab = expit(par_input[1])
+#&#39;  2nd mab = expit(par_input[1] + exp(par_input[2])) - expit(par_input[1])
+#&#39;  kth mab (recursive) = expit(par_input[1] + sum i=2:k exp(par_input[i])) - k-1 mab ratio (recursive)
+#&#39;  nth mab =  1 - n-1 mab ratio
+#&#39;
+#&#39; the first value can be negative, but the rest must be positive, hence exp(par_input[-1])
+#&#39; @return n reals summing to 1
+#&#39;
+calc_opt_ratios = function(par_input){
+  trans_par = exp(par_input[-1])
+  input = c(-Inf, cumsum(c(par_input[1], trans_par)), Inf)
+  out = diff(binomial()$linkinv(input))
+  stopifnot(abs(sum(out) - 1) &lt; 1e-5)
+  out
+}
+
+#&#39; This function organizes 2-bnab optimizations within the 3-bnab framework
+#&#39;
+#&#39; @param r ratios returned from calc_opt_ratios(scalar)
+#&#39; @param remove_mab which mab not in combination
+#&#39;
+#&#39; @return
+#&#39; @export
+#&#39;
+#&#39; @examples
+organize_opt_ratios = function(r, remove_mab){
+  if(remove_mab == 1) return(c(0, r[1], r[2]))
+  if(remove_mab == 2) return(c(r[1], 0, r[2]))
+  if(remove_mab == 3) return(c(r[1], r[2], 0))
+
+  stop(&quot;something wrong in organize_opt_ratios&quot;)
+
+}
+
+# 3-bnab (3BNC117-T, j = 10-1074-T, k = VRC07-523LS) optimization function
+#
+#
+# see triple_pd_calc
+#&#39; Title
+#&#39;
+#&#39; @param par numeric vector being optimized, length 1 (2-bnab) or 2 (3-bnabs)
+#&#39; @param pk_parms see create_pk() above, always analyte levels to include &quot;3BNC117-T&quot;, &quot;10-1074-T&quot; &quot;VRC07-523LS
+#&#39; @param total_dose total dose
+#&#39; @param pk_window passed as time_grid in create_pk() above
+#&#39; @param pd_data wide IC50 data. columns names are 3BNC117, 10-1074, VRC07-523-LS
+#&#39; @param outcome_var PKPD output for optimization (can only do one at a time), see below
+#&#39; @param pk_endpoint PKPD time target for optimization (can only do one at a time), see below
+#&#39; @param mod5pl 5PL model for empirical protection estimates (pegu or AMP in empitical-case-study.Rmd)
+#&#39; @param remove_mab which mab excluded in 2-bnab combination when length(ratios) == 2
+#&#39;
+#&#39;  i = 3BNC117-T, j = 10-1074-T, k = VRC07-523LS
+#&#39;  if single ratio, remove_mab removes mab at given level: 1 = i, 2 = j, 3 = k (default)
+#&#39;  opt_outcomes = crossing(outcome_var = c(&quot;coverage_50&quot;, &quot;coverage_95&quot;), pk_endpoint = c(&quot;trough&quot;, &quot;auc&quot;))
+#&#39;
+#&#39; @return
+#&#39;
+combo_opt_fun = function(par, pk_parms, total_dose, pk_window, pd_data,
+                         outcome_var, pk_endpoint, mod5pl,
+                         remove_mab = 3){
+
+  # this expects 2 or 3 mab combinations
+  stopifnot(length(par) == 1 | length(par) == 2)
+  ratios = calc_opt_ratios(par)
+  if(length(ratios) == 2){
+    stopifnot(remove_mab %in% 1:3)
+    ratios = organize_opt_ratios(ratios, remove_mab)
+  }
+  if(any(ratios &lt; 0)) browser()
+
+  i = ratios[1]
+  j = ratios[2]
+  k = ratios[3]
+  stopifnot(abs(sum(c(i, j, k)) - 1) &lt; 1e-5)
+
+  pkpd_res = pk_parms %&gt;%
+    mutate(dose = if_else(
+      analyte == &quot;3BNC117-T&quot;,
+      total_dose * i,
+      if_else(analyte == &quot;10-1074-T&quot;, total_dose * j,
+              total_dose * k)
+    )) %&gt;%
+    check_dose_calc(total_dose) %&gt;%
+    create_pk(pk_window) %&gt;%
+    pivot_wider(values_from = conc, names_from = analyte) %&gt;%
+    rename(mab_3bnc = `3BNC117-T`, mab_1074 = `10-1074-T`, mab_vrc07 = `VRC07-523LS`) %&gt;%
+    group_by(time) %&gt;%
+    nest() %&gt;%
+    triple_pd_calc(pd_data, mod5pl = mod5pl) %&gt;%
+    select(-data, -protection_res) %&gt;%
+    unnest(neut_summary) %&gt;%
+    ungroup() %&gt;%
+    gather(outcome, value, mean_iip, coverage_50, coverage_95) %&gt;%
+    group_by(outcome) %&gt;%
+    arrange(time) %&gt;%
+    summarize(
+      trough_time = max(time),
+      trough = value[which.max(time)],
+      auc = pracma::trapz(time, value)/trough_time
+    )
+
+  #browser()
+  -dplyr::filter(pkpd_res, outcome == outcome_var)[[pk_endpoint]]
+
+}</code></pre>
+<div id="workflowr-functions" class="section level3">
+<h3>workflowr functions</h3>
+</div>
+</div>
+<div id="build-project-build_all.r" class="section level2">
+<h2>Build project (<code>build_all.R</code>)</h2>
+<p>Publishes the project website by compiling all of the Rmarkdown files using the workflowr API.</p>
+<pre class="r"><code># publishes full pipeline
+wflow_build(
+  c(
+    &quot;analysis/index.Rmd&quot;,
+    &quot;analysis/opt-sims-background.Rmd&quot;,
+    &quot;analysis/sensitivity-analysis.Rmd&quot;,
+    &quot;analysis/bispecific.Rmd&quot;,
+    &quot;analysis/empirical-case-study.Rmd&quot;,
+    &quot;analysis/hill-slope-meta.Rmd&quot;,
+    &quot;analysis/titer-analysis.Rmd&quot;
+  )
+)</code></pre>
+</div>
+<div id="publish-project-publish_all.r" class="section level2">
+<h2>Publish project (<code>publish_all.R</code>)</h2>
+<p>Publishes the project website by compiling all of the Rmarkdown files using the workflowr API.</p>
+<pre class="r"><code># publishes full pipeline
+
+if(!exists(&quot;git_msg&quot;)){
+  print(&quot;set a commit message in git_msg&quot;)
+  stop(&quot;no commit message&quot;)
+}
+
+wflow_publish(
+  c(
+    &quot;analysis/_site.yml&quot;,
+    &quot;analysis/index.Rmd&quot;,
+    &quot;analysis/opt-sims-background.Rmd&quot;,
+    &quot;analysis/sensitivity-analysis.Rmd&quot;,
+    &quot;analysis/bispecific.Rmd&quot;,
+    &quot;analysis/empirical-case-study.Rmd&quot;,
+    &quot;analysis/hill-slope-meta.Rmd&quot;,
+    &quot;analysis/titer-analysis.Rmd&quot;
+  ),
+  message = git_msg
+)
+rm(git_msg)</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.1.0 (2021-05-18)
+Platform: x86_64-apple-darwin17.0 (64-bit)
+Running under: macOS Catalina 10.15.7
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRblas.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] workflowr_1.7.0
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_1.0.7       bslib_0.2.5.1    compiler_4.1.0   pillar_1.6.1    
+ [5] later_1.2.0      git2r_0.28.0     jquerylib_0.1.4  tools_4.1.0     
+ [9] getPass_0.2-2    digest_0.6.29    jsonlite_1.7.3   evaluate_0.14   
+[13] tibble_3.1.2     lifecycle_1.0.1  pkgconfig_2.0.3  rlang_1.0.1     
+[17] cli_3.1.1        rstudioapi_0.13  yaml_2.2.2       xfun_0.29       
+[21] fastmap_1.1.0    httr_1.4.2       stringr_1.4.0    knitr_1.37      
+[25] sass_0.4.0       fs_1.5.2         vctrs_0.3.8      rprojroot_2.0.2 
+[29] glue_1.6.1       R6_2.5.1         processx_3.5.2   fansi_0.5.0     
+[33] rmarkdown_2.11   callr_3.7.0      magrittr_2.0.2   whisker_0.4     
+[37] ps_1.6.0         promises_1.2.0.1 htmltools_0.5.2  ellipsis_0.3.2  
+[41] httpuv_1.6.1     utf8_1.2.1       stringi_1.7.6    crayon_1.4.2    </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
