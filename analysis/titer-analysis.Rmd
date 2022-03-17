@@ -215,6 +215,12 @@ plot_grid(leg, main_figs, nrow = 2, rel_heights = c(1.5,12))
                       
 ```
 
+```{r supp-fig-4-eps,  fig.height=8, fig.width=6, dev = "postscript", include = F}
+
+plot_grid(leg, main_figs, nrow = 2, rel_heights = c(1.5,12))                      
+
+```
+
 
 ## Example 2: Two mAb vs. single virus
 

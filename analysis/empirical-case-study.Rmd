@@ -524,6 +524,13 @@ amp_pegu_dr
 
 ```
 
+```{r supp-fig-3-eps, dev = "postscript", include = F}
+
+amp_pegu_dr
+
+```
+
+
 ## PD input data for 3 bnabs
 
 ```{r empirical-paper-marginal, fig.height=9, fig.width=7.5, fig.cap = "Supp. Fig. 5"}
@@ -532,6 +539,13 @@ top_row = plot_grid(man_pk_pl, ic50_pl + theme(axis.text.x = element_text()),
                     align = "h", axis = "t",  nrow = 1,
                     rel_widths = c(1, 1),
                     labels = c("A", "B"), vjust = 1, hjust = 0)
+
+plot_grid(top_row, marg_cov_pl + theme(legend.position = "none"), labels = c("", "C"), 
+          rel_heights = c(1.75, 2), nrow = 2)
+
+```
+
+```{r supp-fig-5-eps, fig.height=9, fig.width=7.5, dev = "postscript", include = F}
 
 plot_grid(top_row, marg_cov_pl + theme(legend.position = "none"), labels = c("", "C"), 
           rel_heights = c(1.75, 2), nrow = 2)

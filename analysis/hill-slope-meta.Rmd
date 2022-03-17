@@ -171,3 +171,15 @@ catnap_dat_final %>%
 
 ```
 
+```{r supp-fig-1-eps, dev = "postscript", include = F}
+
+catnap_dat_final %>%
+  ggplot(aes(x = factor(IC50_quartile), y = hill_slope)) +
+  geom_boxplot() +
+  scale_y_log10() +
+  geom_text(data = mutate(hill_summary, lab = paste0(round(median, 2), " (", iqr,")")),
+            y = Inf, vjust = 1.2, aes(label = lab)) +
+  labs(x = "IC50 quartiles (ug/mL)", y = "Estimated Hill slope")
+
+```
+
