@@ -11,8 +11,7 @@ editor_options:
 This website is a research compendium for the following paper:
 
 Optimizing clinical dosing of combination broadly neutralizing antibodies for HIV prevention.
-Bryan T. Mayer, Allan C. deCamp, Yunda Huang, Joshua T. Schiffer, Raphael Gottardo, Peter B. Gilbert, Daniel B. Reeves.
-Plos Comp Bio. *Accepted.* 2022. 
+Bryan T. Mayer, Allan C. deCamp, Yunda Huang, Joshua T. Schiffer, Raphael Gottardo, Peter B. Gilbert, Daniel B. Reeves. PLoS Comput Biol. Apr 6;18(4):e1010003. 2022. PMID: 35385469; PMCID: PMC9084525. 
 
 
 ### Shiny Application
