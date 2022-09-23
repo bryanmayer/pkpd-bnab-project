@@ -350,7 +350,7 @@ broadly neutralizing antibodies for HIV prevention.</h1>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
 <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
-workflowr <span class="glyphicon glyphicon-ok text-success"
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
 aria-hidden="true"></span>
 </button>
 </p>
@@ -361,8 +361,8 @@ aria-hidden="true"></span>
 </li>
 <li>
 <a data-toggle="tab" href="#checks"> Checks <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
-</a>
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -375,9 +375,9 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 </p>
 <p>
 <strong>Checks:</strong> <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 2
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 1
 <span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> 0
+aria-hidden="true"></span> 1
 </p>
 <p>
 <strong>Knit directory:</strong> <code>pkpd-bnab-project/</code> <span
@@ -400,33 +400,36 @@ versions</em> tab lists the development history.
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
-<span class="glyphicon glyphicon-ok text-success"
-aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
-</a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguptodate"
+<div id="strongRMarkdownfilestronguncommittedchanges"
 class="panel-collapse collapse">
 <div class="panel-body">
-<p>Great! Since the R Markdown file has been committed to the Git
-repository, you know the exact version of the code that produced these
-results.</p>
+<p>The R Markdown file has unstaged changes. To know which version of
+the R Markdown file created these results, you’ll want to first commit
+it to the Git repo. If you’re still working on the analysis, you can
+ignore this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
 </div>
 </div>
 </div>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombryanmayerpkpdbnabprojecttreea584243661d678edc78f95694503465f8094ed0dtargetblanka584243a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcombryanmayerpkpdbnabprojecttree2d8a5018dec0f6ecff6205b7998c45d4ee573c2ctargetblank2d8a501a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/bryanmayer/pkpd-bnab-project/tree/a584243661d678edc78f95694503465f8094ed0d" target="_blank">a584243</a>
+<a href="https://github.com/bryanmayer/pkpd-bnab-project/tree/2d8a5018dec0f6ecff6205b7998c45d4ee573c2c" target="_blank">2d8a501</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcombryanmayerpkpdbnabprojecttreea584243661d678edc78f95694503465f8094ed0dtargetblanka584243a"
+id="strongRepositoryversionstrongahrefhttpsgithubcombryanmayerpkpdbnabprojecttree2d8a5018dec0f6ecff6205b7998c45d4ee573c2ctargetblank2d8a501a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -436,7 +439,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/bryanmayer/pkpd-bnab-project/tree/a584243661d678edc78f95694503465f8094ed0d" target="_blank">a584243</a>.
+<a href="https://github.com/bryanmayer/pkpd-bnab-project/tree/2d8a5018dec0f6ecff6205b7998c45d4ee573c2c" target="_blank">2d8a501</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -477,6 +480,10 @@ Untracked files:
     Untracked:  data/dose30_scrape.csv
     Untracked:  data/jvi.01909-20-s0001.xlsx
     Untracked:  sim-reproducibility-test.R
+
+Unstaged changes:
+    Modified:   README.md
+    Modified:   analysis/index.Rmd
 
 </code></pre>
 <p>
@@ -521,6 +528,23 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/bryanmayer/pkpd-bnab-project/2d8a5018dec0f6ecff6205b7998c45d4ee573c2c/docs/index.html" target="_blank">2d8a501</a>
+</td>
+<td>
+Bryan
+</td>
+<td>
+2022-09-23
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -665,11 +689,13 @@ Start workflowr project.
 </div>
 </div>
 <p>This website is a research compendium for the following paper:</p>
-<p>Optimizing clinical dosing of combination broadly neutralizing
-antibodies for HIV prevention. Bryan T. Mayer, Allan C. deCamp, Yunda
-Huang, Joshua T. Schiffer, Raphael Gottardo, Peter B. Gilbert, Daniel B.
-Reeves. PLoS Comput Biol. Apr 6;18(4):e1010003. 2022. PMID: 35385469;
-PMCID: PMC9084525.</p>
+<p><a
+href="https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1010003">Optimizing
+clinical dosing of combination broadly neutralizing antibodies for HIV
+prevention.</a> Bryan T. Mayer, Allan C. deCamp, Yunda Huang, Joshua T.
+Schiffer, Raphael Gottardo, Peter B. Gilbert, Daniel B. Reeves. PLoS
+Comput Biol. Apr 6;18(4):e1010003. 2022. PMID: 35385469; PMCID:
+PMC9084525.</p>
 <div id="shiny-application" class="section level3">
 <h3>Shiny Application</h3>
 <ul>
